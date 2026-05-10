@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { Project, TimeEntry } from "@/lib/types/timeEntry.types";
-import { apiFetch } from "@/lib/api";
 
-function nowISO(): string {
+function makeId() { return Math.random().toString(36).slice(2, 10); }
+function nowISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
@@ -11,77 +11,59 @@ interface TrackerState {
   projects: Project[];
   entries: TimeEntry[];
   runningId: string | null;
-  loaded: boolean;
 
-  load: () => Promise<void>;
-  startTimer: (description: string, projectId: string | null, tag: string) => Promise<void>;
-  stopTimer: () => Promise<void>;
-  deleteEntry: (id: string) => Promise<void>;
-  addProject: (name: string, color: string) => Promise<void>;
+  startTimer: (description: string, projectId: string | null, tag: string) => void;
+  stopTimer: () => void;
+  deleteEntry: (id: string) => void;
+  addProject: (name: string, color: string) => void;
 }
 
 export const useTrackerStore = create<TrackerState>((set, get) => ({
   projects: [],
   entries: [],
   runningId: null,
-  loaded: false,
 
-  load: async () => {
-    if (get().loaded) return;
-    const [{ projects }, { entries }] = await Promise.all([
-      apiFetch<{ projects: Project[] }>("/api/tracker/projects"),
-      apiFetch<{ entries: TimeEntry[] }>("/api/tracker/entries"),
-    ]);
-    const running = entries.find((e) => e.endAt === null);
-    set({ projects, entries, runningId: running?.id ?? null, loaded: true });
+  startTimer: (description, projectId, tag) => {
+    get().stopTimer();
+    const entry: TimeEntry = {
+      id: makeId(),
+      projectId,
+      description,
+      tags: tag ? [tag] : [],
+      startAt: nowISO(),
+      endAt: null,
+      duration: null,
+      createdAt: nowISO().slice(0, 10),
+    };
+    set((s) => ({ entries: [entry, ...s.entries], runningId: entry.id }));
   },
 
-  startTimer: async (description, projectId, tag) => {
-    const { entry } = await apiFetch<{ entry: TimeEntry }>("/api/tracker/entries", {
-      method: "POST",
-      body: JSON.stringify({ description, projectId, tags: tag ? [tag] : [] }),
-    });
-    set((s) => ({
-      entries: [entry, ...s.entries.filter((e) => e.endAt !== null)],
-      runningId: entry.id,
-    }));
-    // Reload to get updated stopped entry if any
-    const { entries } = await apiFetch<{ entries: TimeEntry[] }>("/api/tracker/entries");
-    const running = entries.find((e) => e.endAt === null);
-    set({ entries, runningId: running?.id ?? null });
-  },
-
-  stopTimer: async () => {
+  stopTimer: () => {
     const { runningId } = get();
     if (!runningId) return;
-    const { entry } = await apiFetch<{ entry: TimeEntry }>(
-      `/api/tracker/entries/${runningId}/stop`,
-      { method: "POST" }
-    );
+    const endAt = nowISO();
     set((s) => ({
       runningId: null,
-      entries: s.entries.map((e) => (e.id === runningId ? entry : e)),
+      entries: s.entries.map((e) => {
+        if (e.id !== runningId) return e;
+        const start = new Date(e.startAt + ":00").getTime();
+        const end = new Date(endAt + ":00").getTime();
+        return { ...e, endAt, duration: Math.max(Math.floor((end - start) / 1000), 0) };
+      }),
     }));
   },
 
-  deleteEntry: async (id) => {
-    await apiFetch(`/api/tracker/entries/${id}`, { method: "DELETE" });
+  deleteEntry: (id) =>
     set((s) => ({
       entries: s.entries.filter((e) => e.id !== id),
       runningId: s.runningId === id ? null : s.runningId,
-    }));
-  },
+    })),
 
-  addProject: async (name, color) => {
-    const { project } = await apiFetch<{ project: Project }>("/api/tracker/projects", {
-      method: "POST",
-      body: JSON.stringify({ name, color }),
-    });
-    set((s) => ({ projects: [...s.projects, project] }));
-  },
+  addProject: (name, color) =>
+    set((s) => ({
+      projects: [...s.projects, { id: makeId(), name, color, archived: false, createdAt: nowISO().slice(0, 10) }],
+    })),
 }));
-
-// ── Helpers exportés (inchangés) ──────────────────────────────
 
 export function fmtDuration(secs: number): string {
   const h = Math.floor(secs / 3600);

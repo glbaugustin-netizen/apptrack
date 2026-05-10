@@ -1,20 +1,19 @@
 import { create } from "zustand";
 import { Task } from "@/lib/types/task.types";
-import { apiFetch } from "@/lib/api";
+
+function makeId() { return Math.random().toString(36).slice(2, 10); }
 
 interface WorkState {
   tasks: Task[];
   isModalOpen: boolean;
   modalInitialDate: string | null;
-  loaded: boolean;
 
-  load: () => Promise<void>;
   openModal: (date?: string) => void;
   closeModal: () => void;
-  addTask: (data: Pick<Task, "title" | "priority" | "status" | "dueDate">) => Promise<void>;
-  updateTask: (id: string, updates: Partial<Omit<Task, "id" | "createdAt">>) => Promise<void>;
-  deleteTask: (id: string) => Promise<void>;
-  toggleDone: (id: string) => Promise<void>;
+  addTask: (data: Pick<Task, "title" | "priority" | "status" | "dueDate">) => void;
+  updateTask: (id: string, updates: Partial<Omit<Task, "id" | "createdAt">>) => void;
+  deleteTask: (id: string) => void;
+  toggleDone: (id: string) => void;
   reorderTasks: (tasks: Task[]) => void;
 }
 
@@ -22,52 +21,36 @@ export const useWorkStore = create<WorkState>((set, get) => ({
   tasks: [],
   isModalOpen: false,
   modalInitialDate: null,
-  loaded: false,
-
-  load: async () => {
-    if (get().loaded) return;
-    const { tasks } = await apiFetch<{ tasks: Task[] }>("/api/tasks");
-    set({ tasks, loaded: true });
-  },
 
   openModal: (date) => set({ isModalOpen: true, modalInitialDate: date ?? null }),
   closeModal: () => set({ isModalOpen: false, modalInitialDate: null }),
 
-  addTask: async (data) => {
-    const { task } = await apiFetch<{ task: Task }>("/api/tasks", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+  addTask: (data) => {
+    const sameDateCount = get().tasks.filter((t) => t.dueDate === data.dueDate).length;
+    const task: Task = {
+      id: makeId(),
+      title: data.title,
+      status: data.status,
+      priority: data.priority,
+      dueDate: data.dueDate,
+      order: sameDateCount,
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
     set((s) => ({ tasks: [...s.tasks, task] }));
   },
 
-  updateTask: async (id, updates) => {
-    set((s) => ({
-      tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)),
-    }));
-    await apiFetch(`/api/tasks/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(updates),
-    });
-  },
+  updateTask: (id, updates) =>
+    set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)) })),
 
-  deleteTask: async (id) => {
-    await apiFetch(`/api/tasks/${id}`, { method: "DELETE" });
-    set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }));
-  },
+  deleteTask: (id) =>
+    set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
 
-  toggleDone: async (id) => {
-    const task = get().tasks.find((t) => t.id === id);
-    if (!task) return;
-    const newStatus = task.status === "done" ? "todo" : "done";
+  toggleDone: (id) =>
     set((s) => ({
-      tasks: s.tasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t)),
-    }));
-    await apiFetch(`/api/tasks/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ status: newStatus }),
-    });
-  },
+      tasks: s.tasks.map((t) =>
+        t.id === id ? { ...t, status: t.status === "done" ? "todo" : "done" } : t
+      ),
+    })),
 
   reorderTasks: (tasks) => set({ tasks }),
 }));
