@@ -18,7 +18,7 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
 ];
 
 export function TaskModal() {
-  const { isModalOpen, closeModal, addTask, updateTask, modalInitialDate, editingTask } = useWorkStore();
+  const { isModalOpen, closeModal, addTask, updateTask, deleteTask, modalInitialDate, editingTask } = useWorkStore();
   const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const [title, setTitle]       = useState("");
@@ -127,16 +127,28 @@ export function TaskModal() {
         </div>
 
         {/* Footer */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "12px 16px", borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-          <button onClick={closeModal} style={{ padding: "6px 14px", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", background: "transparent", fontSize: 13, cursor: "pointer", color: "var(--color-text-secondary)" }}>
-            Annuler
-          </button>
-          <button
-            onClick={handleSubmit} disabled={!title.trim()}
-            style={{ padding: "6px 14px", background: title.trim() ? "#D85A30" : "var(--color-border-tertiary)", color: title.trim() ? "#fff" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: 13, cursor: title.trim() ? "pointer" : "not-allowed", fontWeight: 500 }}
-          >
-            {editingTask ? "Enregistrer" : "Créer la tâche"}
-          </button>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "12px 16px", borderTop: "0.5px solid var(--color-border-tertiary)" }}>
+          <div>
+            {editingTask && (
+              <button
+                onClick={() => { deleteTask(uid, editingTask.id); closeModal(); }}
+                style={{ padding: "6px 14px", border: "0.5px solid #E24B4A", borderRadius: "var(--border-radius-md)", background: "transparent", fontSize: 13, cursor: "pointer", color: "var(--color-text-danger)" }}
+              >
+                Supprimer
+              </button>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={closeModal} style={{ padding: "6px 14px", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", background: "transparent", fontSize: 13, cursor: "pointer", color: "var(--color-text-secondary)" }}>
+              Annuler
+            </button>
+            <button
+              onClick={handleSubmit} disabled={!title.trim()}
+              style={{ padding: "6px 14px", background: title.trim() ? "#D85A30" : "var(--color-border-tertiary)", color: title.trim() ? "#fff" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: 13, cursor: title.trim() ? "pointer" : "not-allowed", fontWeight: 500 }}
+            >
+              {editingTask ? "Enregistrer" : "Créer la tâche"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

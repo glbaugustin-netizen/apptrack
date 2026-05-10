@@ -1,15 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Roboto } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
-
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
-  subsets: ["latin"],
-  variable: "--font-roboto",
-  display: "swap",
-});
 
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
@@ -30,12 +22,18 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+        />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
         />
       </head>
-      <body className={`${roboto.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistMono.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

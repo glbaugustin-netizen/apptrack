@@ -34,7 +34,7 @@
   --color-text-danger: #A32D2D;
 
   /* Typographie */
-  --font-sans: var(--font-roboto), 'Roboto', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Roboto', system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), 'Courier New', monospace;
 
   /* Rayons */

@@ -14,7 +14,7 @@ const FREQ_OPTIONS: { value: HabitFrequency; label: string }[] = [
 ];
 
 export function HabitModal() {
-  const { isModalOpen, editingHabit, closeModal, addHabit, updateHabit } = useHabitsStore();
+  const { isModalOpen, editingHabit, closeModal, addHabit, updateHabit, deleteHabit } = useHabitsStore();
   const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const [name, setName] = useState("");
@@ -125,16 +125,28 @@ export function HabitModal() {
         </div>
 
         {/* Footer */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "12px 16px", borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-          <button onClick={closeModal} style={{ padding: "6px 14px", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", background: "transparent", fontSize: 13, cursor: "pointer", color: "var(--color-text-secondary)" }}>
-            Annuler
-          </button>
-          <button
-            onClick={handleSubmit} disabled={!name.trim()}
-            style={{ padding: "6px 14px", background: name.trim() ? "#7F77DD" : "var(--color-border-tertiary)", color: name.trim() ? "#fff" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: 13, cursor: name.trim() ? "pointer" : "not-allowed", fontWeight: 500 }}
-          >
-            {editingHabit ? "Enregistrer" : "Créer l'habitude"}
-          </button>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "12px 16px", borderTop: "0.5px solid var(--color-border-tertiary)" }}>
+          <div>
+            {editingHabit && (
+              <button
+                onClick={() => { deleteHabit(uid, editingHabit.id); closeModal(); }}
+                style={{ padding: "6px 14px", border: "0.5px solid #E24B4A", borderRadius: "var(--border-radius-md)", background: "transparent", fontSize: 13, cursor: "pointer", color: "var(--color-text-danger)" }}
+              >
+                Supprimer
+              </button>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={closeModal} style={{ padding: "6px 14px", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", background: "transparent", fontSize: 13, cursor: "pointer", color: "var(--color-text-secondary)" }}>
+              Annuler
+            </button>
+            <button
+              onClick={handleSubmit} disabled={!name.trim()}
+              style={{ padding: "6px 14px", background: name.trim() ? "#7F77DD" : "var(--color-border-tertiary)", color: name.trim() ? "#fff" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: 13, cursor: name.trim() ? "pointer" : "not-allowed", fontWeight: 500 }}
+            >
+              {editingHabit ? "Enregistrer" : "Créer l'habitude"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
