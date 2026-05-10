@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useWorkStore } from "@/lib/store/work.store";
+import { useAuthStore } from "@/lib/store/auth.store";
 import { TaskRow } from "@/components/work/TaskRow";
 import { TaskModal } from "@/components/work/TaskModal";
 
@@ -30,6 +31,7 @@ function formatDayHeader(iso: string): string {
 
 export default function WorkWeekPage() {
   const { tasks, toggleDone, openModal } = useWorkStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const weekISOs = useMemo(() => getWeekISOs(TODAY_ISO), []);
 
@@ -47,7 +49,9 @@ export default function WorkWeekPage() {
   const totalTasks = weekGroups.reduce((sum, g) => sum + g.tasks.length, 0);
   const doneTasks  = weekGroups.reduce((sum, g) => sum + g.tasks.filter((t) => t.status === "done").length, 0);
 
-  const weekRange = `${new Date(weekISOs[0] + "T12:00:00Z").getUTCDate()} – ${new Date(weekISOs[6] + "T12:00:00Z").getUTCDate()} mai`;
+  const weekEnd = new Date(weekISOs[6] + "T12:00:00Z");
+  const MONTHS_FR = ["jan","fév","mar","avr","mai","juin","juil","août","sep","oct","nov","déc"];
+  const weekRange = `${new Date(weekISOs[0] + "T12:00:00Z").getUTCDate()} – ${weekEnd.getUTCDate()} ${MONTHS_FR[weekEnd.getUTCMonth()]}`;
 
   return (
     <div
@@ -136,7 +140,7 @@ export default function WorkWeekPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {dayTasks.map((task) => (
-                <TaskRow key={task.id} task={task} onToggle={() => toggleDone(task.id)} />
+                <TaskRow key={task.id} task={task} onToggle={() => toggleDone(uid, task.id)} />
               ))}
             </div>
           </div>

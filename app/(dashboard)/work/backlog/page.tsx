@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useWorkStore } from "@/lib/store/work.store";
+import { useAuthStore } from "@/lib/store/auth.store";
 import { TaskRow } from "@/components/work/TaskRow";
 import { TaskModal } from "@/components/work/TaskModal";
 
@@ -9,6 +10,7 @@ const TODAY_ISO = new Date().toISOString().slice(0, 10);
 
 export default function WorkBacklogPage() {
   const { tasks, toggleDone, updateTask, openModal } = useWorkStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const backlogTasks = useMemo(
     () => tasks.filter((t) => t.dueDate === null).sort((a, b) => a.order - b.order),
@@ -80,10 +82,10 @@ export default function WorkBacklogPage() {
           {backlogTasks.map((task) => (
             <div key={task.id} style={{ display: "flex", alignItems: "stretch", gap: 8 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <TaskRow task={task} onToggle={() => toggleDone(task.id)} />
+                <TaskRow task={task} onToggle={() => toggleDone(uid, task.id)} />
               </div>
               <button
-                onClick={() => updateTask(task.id, { dueDate: TODAY_ISO })}
+                onClick={() => updateTask(uid, task.id, { dueDate: TODAY_ISO })}
                 style={{
                   padding: "0 14px",
                   border: "0.5px solid var(--color-border-secondary)",

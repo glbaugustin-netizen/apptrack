@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTrackerStore, fmtDuration, fmtHHMMSS } from "@/lib/store/tracker.store";
+import { useAuthStore } from "@/lib/store/auth.store";
 import { ChronoCard } from "@/components/tracker/ChronoCard";
 
 const DAY_FR = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
@@ -33,6 +34,7 @@ function formatDateFr(): string {
 
 export default function TrackerPage() {
   const { projects, entries, runningId, deleteEntry } = useTrackerStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
   const [runningElapsed, setRunningElapsed] = useState(0);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -175,7 +177,7 @@ export default function TrackerPage() {
                   {isRunning && <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "#1D9E75", display: "inline-block" }} />}
                 </span>
                 <div style={{ display: "flex", gap: 4, opacity: hoveredId === entry.id ? 1 : 0, transition: "opacity 0.15s" }}>
-                  <button onClick={() => deleteEntry(entry.id)} style={{ width: 24, height: 24, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 4, fontSize: 13 }}>
+                  <button onClick={() => deleteEntry(uid, entry.id)} style={{ width: 24, height: 24, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 4, fontSize: 13 }}>
                     <i className="ti ti-trash" />
                   </button>
                 </div>

@@ -20,6 +20,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 import { useWorkStore } from "@/lib/store/work.store";
+import { useAuthStore } from "@/lib/store/auth.store";
 import { type Task, type TaskStatus } from "@/lib/types/task.types";
 import { TaskRow } from "@/components/work/TaskRow";
 import { TaskModal } from "@/components/work/TaskModal";
@@ -90,6 +91,7 @@ function SortableTaskRow({ task, onToggle }: { task: Task; onToggle: () => void 
 
 export default function WorkPage() {
   const { tasks, openModal, toggleDone, reorderTasks } = useWorkStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
   const [filter, setFilter] = useState<FilterValue>("all");
 
   const weekISOs = useMemo(() => getWeekISOs(TODAY_ISO), []);
@@ -245,7 +247,7 @@ export default function WorkPage() {
           <SortableContext items={todayTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {filteredTasks.map((task) => (
-                <SortableTaskRow key={task.id} task={task} onToggle={() => toggleDone(task.id)} />
+                <SortableTaskRow key={task.id} task={task} onToggle={() => toggleDone(uid, task.id)} />
               ))}
               {filteredTasks.length === 0 && (
                 <div style={{ textAlign: "center", padding: "28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
@@ -274,7 +276,7 @@ export default function WorkPage() {
           <span style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>Vue semaine</span>
           <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>
             {new Date(weekISOs[0] + "T12:00:00Z").getUTCDate()} –{" "}
-            {new Date(weekISOs[6] + "T12:00:00Z").getUTCDate()} mai
+            {new Date(weekISOs[6] + "T12:00:00Z").getUTCDate()} {["jan","fév","mar","avr","mai","juin","juil","août","sep","oct","nov","déc"][new Date(weekISOs[6] + "T12:00:00Z").getUTCMonth()]}
           </span>
         </div>
 

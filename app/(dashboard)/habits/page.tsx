@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useHabitsStore, computeStreak, getWeekHistory } from "@/lib/store/habits.store";
+import { useAuthStore } from "@/lib/store/auth.store";
 import { HabitRow } from "@/components/habits/HabitRow";
 import { WeekStrip } from "@/components/habits/WeekStrip";
 import { HabitModal } from "@/components/habits/HabitModal";
@@ -17,6 +18,7 @@ const TODAY_ISO = new Date().toISOString().slice(0, 10);
 
 export default function HabitsPage() {
   const { habits, completions, toggleCompletion, openModal } = useHabitsStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const today = useMemo(() => new Date(TODAY_ISO + "T12:00:00Z"), []);
   const weekDates = useMemo(() => getWeekDates(today), [today]);
@@ -61,7 +63,7 @@ export default function HabitsPage() {
 
   // Month total
   const monthTotal = useMemo(() => {
-    const prefix = "2026-05";
+    const prefix = TODAY_ISO.slice(0, 7);
     return completions.filter((c) => c.date.startsWith(prefix)).length;
   }, [completions]);
 
@@ -387,7 +389,7 @@ export default function HabitsPage() {
                   done={done}
                   streak={streak}
                   weekHistory={history}
-                  onToggle={() => toggleCompletion(habit.id, TODAY_ISO)}
+                  onToggle={() => toggleCompletion(uid, habit.id, TODAY_ISO)}
                 />
               );
             })}

@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { EventCategory, CATEGORY_CONFIG, EVENT_COLORS } from "@/lib/types/event.types";
 import { useCalendarStore } from "@/lib/store/calendar.store";
+import { useAuthStore } from "@/lib/store/auth.store";
 
 const CATEGORIES = Object.entries(CATEGORY_CONFIG) as [EventCategory, (typeof CATEGORY_CONFIG)[EventCategory]][];
 
 export function EventModal() {
   const { isModalOpen, closeModal, addEvent, modalInitialDate } = useCalendarStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const [title, setTitle]       = useState("");
   const [startAt, setStartAt]   = useState("");
@@ -28,7 +30,7 @@ export function EventModal() {
 
   function handleSubmit() {
     if (!title.trim()) return;
-    addEvent({ title: title.trim(), startAt, endAt, allDay: false, category, color });
+    addEvent(uid, { title: title.trim(), startAt, endAt, allDay: false, category, color });
     closeModal();
   }
 

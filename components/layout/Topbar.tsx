@@ -1,13 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { MODULES, getModuleFromPath } from "@/lib/modules";
 import { ThemeToggle } from "./ThemeToggle";
+import { useAuthStore } from "@/lib/store/auth.store";
 
 export function Topbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const activeModule = getModuleFromPath(pathname);
+  const { user, logout } = useAuthStore();
+
+  const displayName = user?.displayName || user?.email || "";
+  const initials = displayName
+    ? displayName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+    : "?";
+
+  async function handleLogout() {
+    await logout();
+    router.push("/login");
+  }
 
   return (
     <header style={{ display: "flex", alignItems: "center", height: 44, background: "var(--color-background-primary)", borderBottom: "0.5px solid var(--color-border-tertiary)", padding: "0 12px", flexShrink: 0 }}>
@@ -34,8 +47,20 @@ export function Topbar() {
         })}
       </nav>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <ThemeToggle />
+        <div style={{ display: "flex", alignItems: "center", gap: 7, paddingLeft: 8, borderLeft: "0.5px solid var(--color-border-tertiary)" }}>
+          <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#7F77DD22", border: "0.5px solid #7F77DD55", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: "#7F77DD", flexShrink: 0 }}>
+            {initials}
+          </div>
+          <button
+            onClick={handleLogout}
+            title="Déconnexion"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", fontSize: 14 }}
+          >
+            <i className="ti ti-logout" />
+          </button>
+        </div>
       </div>
     </header>
   );

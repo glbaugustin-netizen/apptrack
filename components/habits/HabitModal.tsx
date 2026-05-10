@@ -4,6 +4,7 @@ import { useState } from "react";
 import { HabitFrequency } from "@/lib/types/habit.types";
 import { HABIT_ICONS, HABIT_COLORS } from "@/lib/habitColors";
 import { useHabitsStore } from "@/lib/store/habits.store";
+import { useAuthStore } from "@/lib/store/auth.store";
 
 const FREQ_OPTIONS: { value: HabitFrequency; label: string }[] = [
   { value: "daily", label: "Chaque jour" },
@@ -14,6 +15,7 @@ const FREQ_OPTIONS: { value: HabitFrequency; label: string }[] = [
 
 export function HabitModal() {
   const { isModalOpen, closeModal, addHabit } = useHabitsStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<string>(HABIT_ICONS[0]);
@@ -22,7 +24,7 @@ export function HabitModal() {
 
   function handleSubmit() {
     if (!name.trim()) return;
-    addHabit({ name: name.trim(), icon, color, frequency });
+    addHabit(uid, { name: name.trim(), icon, color, frequency });
     handleClose();
   }
 

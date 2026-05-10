@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useTrackerStore, fmtHHMMSS } from "@/lib/store/tracker.store";
+import { useAuthStore } from "@/lib/store/auth.store";
 
 export function ChronoCard() {
   const { projects, entries, runningId, startTimer, stopTimer } = useTrackerStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const [description, setDescription] = useState("");
   const [projectId, setProjectId]     = useState<string | null>(projects[0]?.id ?? null);
@@ -29,13 +31,13 @@ export function ChronoCard() {
 
   function handleStart() {
     if (!description.trim()) return;
-    startTimer(description.trim(), projectId, tag.replace(/^#\s*/, ""));
+    startTimer(uid, description.trim(), projectId, tag.replace(/^#\s*/, ""));
     setDescription("");
     setTag("");
   }
 
   function handleStop() {
-    stopTimer();
+    stopTimer(uid);
   }
 
   const canStart = !runningEntry && description.trim().length > 0;

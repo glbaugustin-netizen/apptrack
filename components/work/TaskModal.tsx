@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { TaskPriority, TaskStatus } from "@/lib/types/task.types";
 import { useWorkStore } from "@/lib/store/work.store";
+import { useAuthStore } from "@/lib/store/auth.store";
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string }[] = [
   { value: "high",   label: "Haute",   color: "#E24B4A" },
@@ -18,6 +19,7 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
 
 export function TaskModal() {
   const { isModalOpen, closeModal, addTask, modalInitialDate } = useWorkStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const [title, setTitle]       = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
@@ -36,7 +38,7 @@ export function TaskModal() {
 
   function handleSubmit() {
     if (!title.trim()) return;
-    addTask({ title: title.trim(), priority, status, dueDate: dueDate || null });
+    addTask(uid, { title: title.trim(), priority, status, dueDate: dueDate || null });
     closeModal();
   }
 
