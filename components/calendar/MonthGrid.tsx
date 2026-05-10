@@ -63,7 +63,7 @@ function ViewToggle({ activeView, setView }: { activeView: string; setView: (v: 
 }
 
 export function MonthGrid() {
-  const { events, displayedDate, activeView, navigate, goToToday, openModal, setView } = useCalendarStore();
+  const { events, displayedDate, activeView, navigate, goToToday, openModal, openEditModal, setView } = useCalendarStore();
   const [year, month] = displayedDate.split("-").map(Number);
   const cells = getMonthGrid(year, month);
   const rows = cells.length / 7;
@@ -160,14 +160,15 @@ export function MonthGrid() {
               {dayEvents.slice(0, 2).map((ev) => {
                 const cat = CATEGORY_CONFIG[ev.category];
                 return (
-                  <div key={ev.id} style={{
-                    display: "flex", alignItems: "center", gap: 4,
-                    padding: "2px 5px", borderRadius: 3,
-                    background: cat.bg, overflow: "hidden", whiteSpace: "nowrap",
-                  }}>
+                  <div
+                    key={ev.id}
+                    onClick={(e) => { e.stopPropagation(); openEditModal(ev); }}
+                    style={{ display: "flex", alignItems: "center", gap: 4, padding: "2px 5px", borderRadius: 3, background: cat.bg, overflow: "hidden", whiteSpace: "nowrap", cursor: "pointer" }}
+                  >
                     <span style={{ width: 5, height: 5, borderRadius: "50%", background: ev.color, flexShrink: 0 }} />
                     <span style={{ fontSize: 9, color: cat.text, flexShrink: 0 }}>{formatHour(ev.startAt)}</span>
                     <span style={{ fontSize: 10, color: cat.text, overflow: "hidden", textOverflow: "ellipsis" }}>{ev.title}</span>
+                    <i className="ti ti-pencil" style={{ fontSize: 9, color: cat.text, marginLeft: "auto", flexShrink: 0, opacity: 0.6 }} />
                   </div>
                 );
               })}

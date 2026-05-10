@@ -17,7 +17,7 @@ import {
 const TODAY_ISO = new Date().toISOString().slice(0, 10);
 
 export default function HabitsPage() {
-  const { habits, completions, toggleCompletion, openModal } = useHabitsStore();
+  const { habits, completions, toggleCompletion, openModal, openEditModal } = useHabitsStore();
   const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const today = useMemo(() => new Date(TODAY_ISO + "T12:00:00Z"), []);
@@ -390,6 +390,7 @@ export default function HabitsPage() {
                   streak={streak}
                   weekHistory={history}
                   onToggle={() => toggleCompletion(uid, habit.id, TODAY_ISO)}
+                  onEdit={() => openEditModal(habit)}
                 />
               );
             })}

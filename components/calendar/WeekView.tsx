@@ -65,7 +65,7 @@ function ViewToggle({ activeView, setView }: { activeView: string; setView: (v: 
 }
 
 export function WeekView() {
-  const { events, displayedDate, activeView, navigate, goToToday, openModal, setView } = useCalendarStore();
+  const { events, displayedDate, activeView, navigate, goToToday, openModal, openEditModal, setView } = useCalendarStore();
   const weekDates = getWeekDates(displayedDate);
   const mondayDate = weekDates[0];
   const mondayMonth = parseInt(mondayDate.slice(5, 7));
@@ -163,14 +163,8 @@ export function WeekView() {
                   return (
                     <div
                       key={ev.id}
-                      style={{
-                        position: "absolute", left: 2, right: 2,
-                        top: eventTopPx(ev.startAt),
-                        height: eventHeightPx(ev.startAt, ev.endAt),
-                        background: cat.bg, borderLeft: `2px solid ${ev.color}`,
-                        borderRadius: 3, padding: "2px 4px",
-                        overflow: "hidden", cursor: "pointer",
-                      }}
+                      onClick={(e) => { e.stopPropagation(); openEditModal(ev); }}
+                      style={{ position: "absolute", left: 2, right: 2, top: eventTopPx(ev.startAt), height: eventHeightPx(ev.startAt, ev.endAt), background: cat.bg, borderLeft: `2px solid ${ev.color}`, borderRadius: 3, padding: "2px 4px", overflow: "hidden", cursor: "pointer" }}
                     >
                       <div style={{ fontSize: 10, fontWeight: 500, color: cat.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ev.title}</div>
                       <div style={{ fontSize: 9, color: cat.text, opacity: 0.8 }}>{ev.startAt.slice(11, 16)}</div>

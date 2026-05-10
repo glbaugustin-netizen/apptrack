@@ -9,11 +9,13 @@ interface WorkState {
   tasks: Task[];
   isModalOpen: boolean;
   modalInitialDate: string | null;
+  editingTask: Task | null;
   loaded: boolean;
 
   load: (uid: string) => Promise<void>;
   openModal: (date?: string) => void;
   closeModal: () => void;
+  openEditModal: (task: Task) => void;
   addTask: (uid: string, data: Pick<Task, "title" | "priority" | "status" | "dueDate">) => Promise<void>;
   updateTask: (uid: string, id: string, updates: Partial<Omit<Task, "id" | "createdAt">>) => Promise<void>;
   deleteTask: (uid: string, id: string) => Promise<void>;
@@ -25,6 +27,7 @@ export const useWorkStore = create<WorkState>((set, get) => ({
   tasks: [],
   isModalOpen: false,
   modalInitialDate: null,
+  editingTask: null,
   loaded: false,
 
   load: async (uid) => {
@@ -32,8 +35,9 @@ export const useWorkStore = create<WorkState>((set, get) => ({
     set({ tasks: snap.docs.map((d) => d.data() as Task), loaded: true });
   },
 
-  openModal: (date) => set({ isModalOpen: true, modalInitialDate: date ?? null }),
-  closeModal: () => set({ isModalOpen: false, modalInitialDate: null }),
+  openModal: (date) => set({ isModalOpen: true, modalInitialDate: date ?? null, editingTask: null }),
+  closeModal: () => set({ isModalOpen: false, modalInitialDate: null, editingTask: null }),
+  openEditModal: (task) => set({ isModalOpen: true, editingTask: task, modalInitialDate: null }),
 
   addTask: async (uid, data) => {
     const id = makeId();
@@ -43,7 +47,7 @@ export const useWorkStore = create<WorkState>((set, get) => ({
   },
 
   updateTask: async (uid, id, updates) => {
-    set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)) }));
+    set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)), isModalOpen: false, editingTask: null }));
     await updateDoc(doc(db, "users", uid, "tasks", id), updates as Record<string, unknown>);
   },
 

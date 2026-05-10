@@ -21,7 +21,7 @@ export function ChronoCard() {
   useEffect(() => {
     if (!runningEntry) { setElapsed(0); return; }
     const update = () => {
-      const start = new Date(runningEntry.startAt + ":00").getTime();
+      const start = new Date(runningEntry.startAt).getTime();
       setElapsed(Math.max(0, Math.floor((Date.now() - start) / 1000)));
     };
     update();

@@ -34,7 +34,7 @@
   --color-text-danger: #A32D2D;
 
   /* Typographie */
-  --font-sans: var(--font-geist-sans), Inter, system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-roboto), 'Roboto', system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), 'Courier New', monospace;
 
   /* Rayons */
@@ -83,7 +83,7 @@ body {
   font-family: var(--font-sans);
   background: var(--color-background-tertiary);
   color: var(--color-text-primary);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

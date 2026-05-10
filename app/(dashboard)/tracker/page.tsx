@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTrackerStore, fmtDuration, fmtHHMMSS } from "@/lib/store/tracker.store";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { ChronoCard } from "@/components/tracker/ChronoCard";
+import { TimeEntryEditModal } from "@/components/tracker/TimeEntryEditModal";
 
 const DAY_FR = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 const DAY_LABELS_MON = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -33,7 +34,7 @@ function formatDateFr(): string {
 }
 
 export default function TrackerPage() {
-  const { projects, entries, runningId, deleteEntry } = useTrackerStore();
+  const { projects, entries, runningId, deleteEntry, openEditEntry } = useTrackerStore();
   const uid = useAuthStore((s) => s.user?.uid ?? "");
   const [runningElapsed, setRunningElapsed] = useState(0);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -51,7 +52,7 @@ export default function TrackerPage() {
   useEffect(() => {
     if (!runningEntry) { setRunningElapsed(0); return; }
     const update = () => {
-      const start = new Date(runningEntry.startAt + ":00").getTime();
+      const start = new Date(runningEntry.startAt).getTime();
       setRunningElapsed(Math.max(0, Math.floor((Date.now() - start) / 1000)));
     };
     update();
@@ -177,7 +178,12 @@ export default function TrackerPage() {
                   {isRunning && <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "#1D9E75", display: "inline-block" }} />}
                 </span>
                 <div style={{ display: "flex", gap: 4, opacity: hoveredId === entry.id ? 1 : 0, transition: "opacity 0.15s" }}>
-                  <button onClick={() => deleteEntry(uid, entry.id)} style={{ width: 24, height: 24, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 4, fontSize: 13 }}>
+                  {!isRunning && (
+                    <button onClick={() => openEditEntry(entry)} style={{ width: 24, height: 24, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 4, fontSize: 13 }} title="Modifier">
+                      <i className="ti ti-pencil" />
+                    </button>
+                  )}
+                  <button onClick={() => deleteEntry(uid, entry.id)} style={{ width: 24, height: 24, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 4, fontSize: 13 }} title="Supprimer">
                     <i className="ti ti-trash" />
                   </button>
                 </div>
@@ -217,6 +223,7 @@ export default function TrackerPage() {
           })}
         </div>
       </div>
+      <TimeEntryEditModal />
     </div>
   );
 }

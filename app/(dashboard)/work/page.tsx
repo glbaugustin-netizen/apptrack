@@ -64,22 +64,17 @@ const FILTER_OPTIONS: { value: FilterValue; label: string }[] = [
   { value: "done",        label: "Terminées" },
 ];
 
-function SortableTaskRow({ task, onToggle }: { task: Task; onToggle: () => void }) {
+function SortableTaskRow({ task, onToggle, onEdit }: { task: Task; onToggle: () => void; onEdit: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   return (
     <div
       ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-        position: "relative",
-        zIndex: isDragging ? 10 : "auto",
-      }}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, position: "relative", zIndex: isDragging ? 10 : "auto" }}
     >
       <TaskRow
         task={task}
         onToggle={onToggle}
+        onEdit={onEdit}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         dragHandleListeners={listeners as any}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,7 +85,7 @@ function SortableTaskRow({ task, onToggle }: { task: Task; onToggle: () => void 
 }
 
 export default function WorkPage() {
-  const { tasks, openModal, toggleDone, reorderTasks } = useWorkStore();
+  const { tasks, openModal, openEditModal, toggleDone, reorderTasks } = useWorkStore();
   const uid = useAuthStore((s) => s.user?.uid ?? "");
   const [filter, setFilter] = useState<FilterValue>("all");
 
@@ -247,7 +242,7 @@ export default function WorkPage() {
           <SortableContext items={todayTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {filteredTasks.map((task) => (
-                <SortableTaskRow key={task.id} task={task} onToggle={() => toggleDone(uid, task.id)} />
+                <SortableTaskRow key={task.id} task={task} onToggle={() => toggleDone(uid, task.id)} onEdit={() => openEditModal(task)} />
               ))}
               {filteredTasks.length === 0 && (
                 <div style={{ textAlign: "center", padding: "28px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>

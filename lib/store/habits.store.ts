@@ -24,12 +24,15 @@ interface HabitsState {
   habits: Habit[];
   completions: HabitCompletion[];
   isModalOpen: boolean;
+  editingHabit: Habit | null;
   loaded: boolean;
 
   load: (uid: string) => Promise<void>;
   openModal: () => void;
   closeModal: () => void;
+  openEditModal: (habit: Habit) => void;
   addHabit: (uid: string, data: Pick<Habit, "name" | "icon" | "color" | "frequency">) => Promise<void>;
+  updateHabit: (uid: string, id: string, updates: Pick<Habit, "name" | "icon" | "color" | "frequency">) => Promise<void>;
   deleteHabit: (uid: string, id: string) => Promise<void>;
   reorderHabit: (uid: string, id: string, newOrder: number) => Promise<void>;
   toggleCompletion: (uid: string, habitId: string, date: string) => Promise<void>;
@@ -40,6 +43,7 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
   habits: [],
   completions: [],
   isModalOpen: false,
+  editingHabit: null,
   loaded: false,
 
   load: async (uid) => {
@@ -52,14 +56,20 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     set({ habits, completions, loaded: true });
   },
 
-  openModal: () => set({ isModalOpen: true }),
-  closeModal: () => set({ isModalOpen: false }),
+  openModal: () => set({ isModalOpen: true, editingHabit: null }),
+  closeModal: () => set({ isModalOpen: false, editingHabit: null }),
+  openEditModal: (habit) => set({ isModalOpen: true, editingHabit: habit }),
 
   addHabit: async (uid, data) => {
     const id = makeId();
     const habit: Habit = { id, name: data.name, icon: data.icon, color: data.color, frequency: data.frequency, targetDays: [], order: get().habits.length, createdAt: new Date().toISOString().slice(0, 10) };
     await setDoc(doc(db, "users", uid, "habits", id), habit);
     set((s) => ({ habits: [...s.habits, habit] }));
+  },
+
+  updateHabit: async (uid, id, updates) => {
+    set((s) => ({ habits: s.habits.map((h) => h.id === id ? { ...h, ...updates } : h), isModalOpen: false, editingHabit: null }));
+    await updateDoc(doc(db, "users", uid, "habits", id), updates as Record<string, unknown>);
   },
 
   deleteHabit: async (uid, id) => {

@@ -9,7 +9,7 @@ import { TaskModal } from "@/components/work/TaskModal";
 const TODAY_ISO = new Date().toISOString().slice(0, 10);
 
 export default function WorkBacklogPage() {
-  const { tasks, toggleDone, updateTask, openModal } = useWorkStore();
+  const { tasks, toggleDone, updateTask, openModal, openEditModal } = useWorkStore();
   const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const backlogTasks = useMemo(
@@ -82,7 +82,7 @@ export default function WorkBacklogPage() {
           {backlogTasks.map((task) => (
             <div key={task.id} style={{ display: "flex", alignItems: "stretch", gap: 8 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <TaskRow task={task} onToggle={() => toggleDone(uid, task.id)} />
+                <TaskRow task={task} onToggle={() => toggleDone(uid, task.id)} onEdit={() => openEditModal(task)} />
               </div>
               <button
                 onClick={() => updateTask(uid, task.id, { dueDate: TODAY_ISO })}

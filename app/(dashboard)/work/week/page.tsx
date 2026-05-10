@@ -30,7 +30,7 @@ function formatDayHeader(iso: string): string {
 }
 
 export default function WorkWeekPage() {
-  const { tasks, toggleDone, openModal } = useWorkStore();
+  const { tasks, toggleDone, openModal, openEditModal } = useWorkStore();
   const uid = useAuthStore((s) => s.user?.uid ?? "");
 
   const weekISOs = useMemo(() => getWeekISOs(TODAY_ISO), []);
@@ -140,7 +140,7 @@ export default function WorkWeekPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {dayTasks.map((task) => (
-                <TaskRow key={task.id} task={task} onToggle={() => toggleDone(uid, task.id)} />
+                <TaskRow key={task.id} task={task} onToggle={() => toggleDone(uid, task.id)} onEdit={() => openEditModal(task)} />
               ))}
             </div>
           </div>

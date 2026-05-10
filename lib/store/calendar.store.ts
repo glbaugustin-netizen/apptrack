@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CalendarEvent } from "@/lib/types/event.types";
 
@@ -14,6 +14,7 @@ interface CalendarState {
   displayedDate: string;
   isModalOpen: boolean;
   modalInitialDate: string | null;
+  editingEvent: CalendarEvent | null;
   loaded: boolean;
 
   load: (uid: string) => Promise<void>;
@@ -23,7 +24,9 @@ interface CalendarState {
   goToToday: () => void;
   openModal: (date?: string) => void;
   closeModal: () => void;
+  openEditModal: (event: CalendarEvent) => void;
   addEvent: (uid: string, data: Omit<CalendarEvent, "id" | "createdAt">) => Promise<void>;
+  updateEvent: (uid: string, id: string, updates: Partial<Omit<CalendarEvent, "id" | "createdAt">>) => Promise<void>;
   deleteEvent: (uid: string, id: string) => Promise<void>;
 }
 
@@ -33,6 +36,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   displayedDate: toISO(new Date()),
   isModalOpen: false,
   modalInitialDate: null,
+  editingEvent: null,
   loaded: false,
 
   load: async (uid) => {
@@ -60,14 +64,20 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
 
   goToToday: () => set({ displayedDate: toISO(new Date()) }),
 
-  openModal: (date) => set({ isModalOpen: true, modalInitialDate: date ?? null }),
-  closeModal: () => set({ isModalOpen: false, modalInitialDate: null }),
+  openModal: (date) => set({ isModalOpen: true, modalInitialDate: date ?? null, editingEvent: null }),
+  closeModal: () => set({ isModalOpen: false, modalInitialDate: null, editingEvent: null }),
+  openEditModal: (event) => set({ isModalOpen: true, editingEvent: event, modalInitialDate: null }),
 
   addEvent: async (uid, data) => {
     const id = makeId();
     const event: CalendarEvent = { ...data, id, createdAt: toISO(new Date()) };
     await setDoc(doc(db, "users", uid, "events", id), event);
     set((s) => ({ events: [...s.events, event] }));
+  },
+
+  updateEvent: async (uid, id, updates) => {
+    set((s) => ({ events: s.events.map((e) => e.id === id ? { ...e, ...updates } : e), isModalOpen: false, editingEvent: null }));
+    await updateDoc(doc(db, "users", uid, "events", id), updates as Record<string, unknown>);
   },
 
   deleteEvent: async (uid, id) => {

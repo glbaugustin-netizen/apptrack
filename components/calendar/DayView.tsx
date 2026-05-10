@@ -49,7 +49,7 @@ function ViewToggle({ activeView, setView }: { activeView: string; setView: (v: 
 }
 
 export function DayView() {
-  const { events, displayedDate, activeView, navigate, goToToday, openModal, setView } = useCalendarStore();
+  const { events, displayedDate, activeView, navigate, goToToday, openModal, openEditModal, setView } = useCalendarStore();
   const [year, month, day] = displayedDate.split("-").map(Number);
   const dayName = DAY_FR[new Date(year, month - 1, day).getDay()];
   const isToday = displayedDate === TODAY;
@@ -143,19 +143,11 @@ export function DayView() {
               return (
                 <div
                   key={ev.id}
-                  style={{
-                    position: "absolute", left: 8, right: 8,
-                    top: eventTopPx(ev.startAt),
-                    height: eventHeightPx(ev.startAt, ev.endAt),
-                    background: cat.bg, borderLeft: `3px solid ${ev.color}`,
-                    borderRadius: 4, padding: "4px 8px",
-                    overflow: "hidden", cursor: "pointer",
-                  }}
+                  onClick={() => openEditModal(ev)}
+                  style={{ position: "absolute", left: 8, right: 8, top: eventTopPx(ev.startAt), height: eventHeightPx(ev.startAt, ev.endAt), background: cat.bg, borderLeft: `3px solid ${ev.color}`, borderRadius: 4, padding: "4px 8px", overflow: "hidden", cursor: "pointer" }}
                 >
                   <div style={{ fontSize: 12, fontWeight: 500, color: cat.text }}>{ev.title}</div>
-                  <div style={{ fontSize: 10, color: cat.text, opacity: 0.8 }}>
-                    {ev.startAt.slice(11, 16)} – {ev.endAt.slice(11, 16)}
-                  </div>
+                  <div style={{ fontSize: 10, color: cat.text, opacity: 0.8 }}>{ev.startAt.slice(11, 16)} – {ev.endAt.slice(11, 16)}</div>
                 </div>
               );
             })}
