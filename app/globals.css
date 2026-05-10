@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Variables ─────────────────────────────────────────── */
+
+:root {
+  /* Backgrounds */
+  --color-background-primary: #FFFFFF;
+  --color-background-secondary: #F7F6F3;
+  --color-background-tertiary: #F1EFE8;
+
+  /* Calendrier */
+  --color-calendar-today-bg: #EFF6FF;
+
+  /* Texte */
+  --color-text-primary: #2C2C2A;
+  --color-text-secondary: #5F5E5A;
+  --color-text-tertiary: #888780;
+
+  /* Bordures */
+  --color-border-tertiary: rgba(0, 0, 0, 0.12);
+  --color-border-secondary: rgba(0, 0, 0, 0.20);
+  --color-border-primary: rgba(0, 0, 0, 0.30);
+
+  /* Sémantiques */
+  --color-background-info: #E6F1FB;
+  --color-text-info: #185FA5;
+  --color-background-success: #EAF3DE;
+  --color-text-success: #27500A;
+  --color-background-warning: #FAEEDA;
+  --color-text-warning: #633806;
+  --color-background-danger: #FCEBEB;
+  --color-text-danger: #A32D2D;
+
+  /* Typographie */
+  --font-sans: var(--font-geist-sans), Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), 'Courier New', monospace;
+
+  /* Rayons */
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+}
+
+.dark {
+  /* Backgrounds */
+  --color-background-primary: #1C1C1A;
+  --color-background-secondary: #252523;
+  --color-background-tertiary: #111110;
+
+  /* Texte */
+  --color-text-primary: #F1EFE8;
+  --color-text-secondary: #B4B2A9;
+  --color-text-tertiary: #5F5E5A;
+
+  /* Bordures */
+  --color-border-tertiary: rgba(255, 255, 255, 0.10);
+  --color-border-secondary: rgba(255, 255, 255, 0.16);
+  --color-border-primary: rgba(255, 255, 255, 0.25);
+
+  /* Calendrier */
+  --color-calendar-today-bg: rgba(55, 138, 221, 0.08);
+
+  /* Sémantiques dark */
+  --color-background-info: rgba(55, 138, 221, 0.15);
+  --color-text-info: #85B7EB;
+  --color-background-success: rgba(99, 153, 34, 0.15);
+  --color-text-success: #C0DD97;
+  --color-background-warning: rgba(239, 159, 39, 0.15);
+  --color-text-warning: #FAC775;
+  --color-background-danger: rgba(226, 75, 74, 0.15);
+  --color-text-danger: #F7C1C1;
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background-tertiary);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Animations ─────────────────────────────────────────────── */
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* ── Utilities ──────────────────────────────────────────────── */
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-bar {
+  height: 3px;
+  background: var(--color-border-tertiary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
