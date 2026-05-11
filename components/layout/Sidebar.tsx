@@ -142,18 +142,7 @@ interface SidebarProps {
 
 export function Sidebar({ activeModule }: SidebarProps) {
   return (
-    <aside
-      style={{
-        width: 180,
-        flexShrink: 0,
-        background: "var(--color-background-primary)",
-        borderRight: "0.5px solid var(--color-border-tertiary)",
-        display: "flex",
-        flexDirection: "column",
-        overflowY: "auto",
-        overflowX: "hidden",
-      }}
-    >
+    <aside className="shell-sidebar">
       {activeModule.id === "habits" && <HabitsSidebar />}
       {activeModule.id === "work" && <WorkSidebar />}
       {activeModule.id === "calendar" && <CalendarSidebar />}

@@ -111,7 +111,7 @@ export default function TrackerPage() {
       <ChronoCard />
 
       {/* 4 metric cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
+      <div className="grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginBottom: 3 }}>Aujourd&apos;hui</div>
           <div style={{ fontSize: 20, fontWeight: 500, color: "var(--color-text-primary)", lineHeight: 1.2 }}>{fmtDuration(totalSecondsToday)}</div>

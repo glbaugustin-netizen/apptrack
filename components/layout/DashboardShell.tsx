@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { getModuleFromPath } from "@/lib/modules";
 import { Topbar } from "./Topbar";
 import { Sidebar } from "./Sidebar";
+import { MobileBottomNav } from "./MobileBottomNav";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { useHabitsStore } from "@/lib/store/habits.store";
 import { useWorkStore } from "@/lib/store/work.store";
@@ -46,10 +47,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <Topbar />
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <Sidebar activeModule={activeModule} />
-        <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", background: "var(--color-background-tertiary)" }}>
+        <main className="shell-main">
           {children}
         </main>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

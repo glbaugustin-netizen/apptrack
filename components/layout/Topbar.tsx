@@ -29,7 +29,7 @@ export function Topbar() {
         Productivity
       </div>
 
-      <nav style={{ display: "flex", alignItems: "center", flex: 1 }}>
+      <nav className="topbar-module-nav">
         {MODULES.map((module) => {
           const isActive = activeModule.id === module.id;
           return (
@@ -41,7 +41,7 @@ export function Topbar() {
               onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLAnchorElement).style.color = "var(--color-text-secondary)"; }}
             >
               <i className={`ti ${module.icon}`} style={{ fontSize: 15 }} />
-              {module.label}
+              <span className="topbar-module-label">{module.label}</span>
             </Link>
           );
         })}
