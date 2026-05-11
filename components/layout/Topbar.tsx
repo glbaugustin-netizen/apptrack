@@ -30,7 +30,7 @@ export function Topbar() {
       <button
         className="topbar-hamburger"
         onClick={toggleSidebar}
-        style={{ display: "none", alignItems: "center", justifyContent: "center", width: 32, height: 32, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", fontSize: 20, marginRight: 8, flexShrink: 0 }}
+        style={{ alignItems: "center", justifyContent: "center", width: 32, height: 32, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", fontSize: 20, marginRight: 8, flexShrink: 0 }}
       >
         <i className="ti ti-menu-2" />
       </button>
