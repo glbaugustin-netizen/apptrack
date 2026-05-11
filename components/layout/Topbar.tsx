@@ -5,12 +5,14 @@ import { useRouter, usePathname } from "next/navigation";
 import { MODULES, getModuleFromPath } from "@/lib/modules";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuthStore } from "@/lib/store/auth.store";
+import { useUIStore } from "@/lib/store/ui.store";
 
 export function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
   const activeModule = getModuleFromPath(pathname);
   const { user, logout } = useAuthStore();
+  const { toggleSidebar } = useUIStore();
 
   const displayName = user?.displayName || user?.email || "";
   const initials = displayName
@@ -24,9 +26,17 @@ export function Topbar() {
 
   return (
     <header style={{ display: "flex", alignItems: "center", height: 44, background: "var(--color-background-primary)", borderBottom: "0.5px solid var(--color-border-tertiary)", padding: "0 12px", flexShrink: 0 }}>
+      {/* Hamburger — mobile only */}
+      <button
+        className="topbar-hamburger"
+        onClick={toggleSidebar}
+        style={{ display: "none", alignItems: "center", justifyContent: "center", width: 32, height: 32, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", fontSize: 20, marginRight: 8, flexShrink: 0 }}
+      >
+        <i className="ti ti-menu-2" />
+      </button>
       <div style={{ display: "flex", alignItems: "center", gap: 7, paddingRight: 16, borderRight: "0.5px solid var(--color-border-tertiary)", marginRight: 4, fontWeight: 500, fontSize: 14, color: "var(--color-text-primary)", whiteSpace: "nowrap", flexShrink: 0 }}>
         <i className="ti ti-layout-dashboard" style={{ fontSize: 17, color: "#7F77DD" }} />
-        Productivity
+        <span className="topbar-module-label">Productivity</span>
       </div>
 
       <nav className="topbar-module-nav">

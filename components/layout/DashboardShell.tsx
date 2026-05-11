@@ -6,6 +6,7 @@ import { getModuleFromPath } from "@/lib/modules";
 import { Topbar } from "./Topbar";
 import { Sidebar } from "./Sidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { useUIStore } from "@/lib/store/ui.store";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { useHabitsStore } from "@/lib/store/habits.store";
 import { useWorkStore } from "@/lib/store/work.store";
@@ -18,6 +19,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const activeModule = getModuleFromPath(pathname);
 
   const { init, loading } = useAuthStore();
+  const { sidebarOpen, closeSidebar } = useUIStore();
   const loadHabits = useHabitsStore((s) => s.load);
   const loadWork = useWorkStore((s) => s.load);
   const loadCalendar = useCalendarStore((s) => s.load);
@@ -45,8 +47,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--color-background-tertiary)", overflow: "hidden" }}>
       <Topbar />
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        <Sidebar activeModule={activeModule} />
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
+        {/* Overlay mobile */}
+        {sidebarOpen && (
+          <div
+            className="mobile-overlay"
+            onClick={closeSidebar}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 40 }}
+          />
+        )}
+        {/* Sidebar — drawer sur mobile */}
+        <div className={`shell-sidebar-wrapper${sidebarOpen ? " sidebar-open" : ""}`}>
+          <Sidebar activeModule={activeModule} />
+        </div>
         <main className="shell-main">
           {children}
         </main>

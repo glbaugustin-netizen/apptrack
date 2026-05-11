@@ -126,9 +126,14 @@ button:active {
 
 /* ── Responsive ─────────────────────────────────────────────── */
 
-.shell-sidebar {
+.shell-sidebar-wrapper {
   width: 180px;
   flex-shrink: 0;
+}
+
+.shell-sidebar {
+  width: 180px;
+  height: 100%;
   background: var(--color-background-primary);
   border-right: 0.5px solid var(--color-border-tertiary);
   display: flex;
@@ -142,11 +147,14 @@ button:active {
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--color-background-tertiary);
-  padding-bottom: 0;
 }
 
 .mobile-bottom-nav {
   display: none;
+}
+
+.topbar-hamburger {
+  display: none !important;
 }
 
 .topbar-module-nav {
@@ -160,14 +168,39 @@ button:active {
 }
 
 @media (max-width: 768px) {
+  /* Sidebar : drawer glissant depuis la gauche */
+  .shell-sidebar-wrapper {
+    width: 0;
+    position: fixed;
+    top: 44px;
+    left: 0;
+    bottom: 56px;
+    z-index: 50;
+    transition: width 0.25s ease;
+    overflow: hidden;
+  }
+
+  .shell-sidebar-wrapper.sidebar-open {
+    width: 220px;
+  }
+
   .shell-sidebar {
-    display: none;
+    width: 220px;
+    height: 100%;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.12);
+  }
+
+  /* Hamburger visible sur mobile */
+  .topbar-hamburger {
+    display: flex !important;
   }
 
   .shell-main {
     padding-bottom: 64px;
+    width: 100%;
   }
 
+  /* Bottom nav */
   .mobile-bottom-nav {
     display: flex;
     position: fixed;
@@ -184,6 +217,7 @@ button:active {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
+  /* Topbar : nav cachée */
   .topbar-module-nav {
     display: none;
   }
@@ -192,12 +226,12 @@ button:active {
     display: none;
   }
 
-  /* Grilles : 4 colonnes → 2 colonnes sur mobile */
+  /* Grilles : 4 colonnes → 2 colonnes */
   .grid-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
-  /* Padding réduit sur mobile */
+  /* Padding réduit */
   .page-padding {
     padding: 12px !important;
   }
