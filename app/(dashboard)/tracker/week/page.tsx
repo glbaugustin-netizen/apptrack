@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useTrackerStore, fmtDuration } from "@/lib/store/tracker.store";
+import { useAuthStore } from "@/lib/store/auth.store";
+import { TimeEntryEditModal } from "@/components/tracker/TimeEntryEditModal";
 
 const DAY_LONG = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 const MONTHS_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
@@ -24,7 +27,9 @@ function todayISO(): string {
 }
 
 export default function TrackerWeekPage() {
-  const { projects, entries, runningId } = useTrackerStore();
+  const { projects, entries, runningId, openEditEntry, deleteEntry } = useTrackerStore();
+  const uid = useAuthStore((s) => s.user?.uid ?? "");
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const weekDays = getWeekISOs();
   const TODAY = todayISO();
 
@@ -42,6 +47,8 @@ export default function TrackerWeekPage() {
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>Total : {fmtDuration(totalWeekSecs)}</p>
         </div>
       </div>
+
+      <TimeEntryEditModal />
 
       {weekDays.map(({ iso, label }) => {
         const dayEntries = entries
@@ -73,8 +80,14 @@ export default function TrackerWeekPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 {dayEntries.map((entry) => {
                   const proj = projects.find((p) => p.id === entry.projectId);
+                  const isHovered = hoveredId === entry.id;
                   return (
-                    <div key={entry.id} style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", padding: "8px 12px" }}>
+                    <div
+                      key={entry.id}
+                      onMouseEnter={() => setHoveredId(entry.id)}
+                      onMouseLeave={() => setHoveredId(null)}
+                      style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--color-background-primary)", border: `0.5px solid ${isHovered ? "var(--color-border-secondary)" : "var(--color-border-tertiary)"}`, borderRadius: "var(--border-radius-md)", padding: "8px 12px", transition: "border-color 0.1s" }}
+                    >
                       <div style={{ width: 3, height: 28, borderRadius: 2, background: proj?.color ?? "#888780", flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, color: "var(--color-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.description}</div>
@@ -83,13 +96,21 @@ export default function TrackerWeekPage() {
                         </div>
                       </div>
                       {entry.tags[0] && (
-                        <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: "var(--color-background-secondary)", color: "var(--color-text-secondary)" }}>
+                        <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>
                           #{entry.tags[0]}
                         </span>
                       )}
-                      <span className="tabular-nums" style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>
+                      <span className="tabular-nums" style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", whiteSpace: "nowrap" }}>
                         {fmtDuration(entry.duration ?? 0)}
                       </span>
+                      <div style={{ display: "flex", gap: 4, opacity: isHovered ? 1 : 0, transition: "opacity 0.15s" }}>
+                        <button onClick={() => openEditEntry(entry)} style={{ width: 24, height: 24, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 4, fontSize: 13 }} title="Modifier">
+                          <i className="ti ti-pencil" />
+                        </button>
+                        <button onClick={() => deleteEntry(uid, entry.id)} style={{ width: 24, height: 24, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 4, fontSize: 13 }} title="Supprimer">
+                          <i className="ti ti-trash" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
