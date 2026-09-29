@@ -130,7 +130,7 @@ export function GradeModal() {
           <span>
             <span style={{ display: "block", fontSize: 13, color: "var(--color-text-primary)" }}>Ramener sur 20</span>
             <span style={{ display: "block", fontSize: 11, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
-              Même option que sur Pronote. Décochée, la note compte au prorata de son barème : elle pèse {o < 20 ? "moins" : "plus"} qu&apos;une note sur 20.
+              Laisse coché si cette note a un (r) dans le détail du calcul Pronote. Sans (r), elle compte au prorata de son barème : elle pèse {o < 20 ? "moins" : "plus"} qu&apos;une note sur 20.
             </span>
           </span>
         </label>
