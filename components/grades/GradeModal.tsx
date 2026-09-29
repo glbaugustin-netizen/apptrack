@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
-import { useGradesStore, fmtNum, parseNum, sortGrades } from "@/lib/store/grades.store";
+import { useGradesStore, fmtNum, parseNum, parseGradeInput } from "@/lib/store/grades.store";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { formatISO } from "@/lib/utils/date";
 import { ACCENT, INPUT, LABEL, focusRing, PrimaryButton, SecondaryButton } from "./ui";
@@ -14,8 +14,7 @@ export function GradeModal() {
   const subject = subjects.find((s) => s.id === gradeModal?.subjectId);
 
   const [title, setTitle] = useState("");
-  const [value, setValue] = useState("");
-  const [outOf, setOutOf] = useState("20");
+  const [note, setNote] = useState(""); // « 15,50/17 », comme affiché sur Pronote
   const [rescale, setRescale] = useState(true);
   const [coef, setCoef] = useState("1");
   const [date, setDate] = useState("");
@@ -25,11 +24,8 @@ export function GradeModal() {
   useEffect(() => {
     if (!gradeModal) return;
     const g = gradeModal.editing;
-    // Nouvelle note : on reprend le barème de la dernière note de la matière
-    const previous = sortGrades(useGradesStore.getState().grades.filter((x) => x.subjectId === gradeModal.subjectId)).pop();
     setTitle(g?.title ?? "");
-    setValue(g ? fmtNum(g.value) : "");
-    setOutOf(fmtNum(g?.outOf ?? previous?.outOf ?? 20));
+    setNote(g ? `${fmtNum(g.value)}/${fmtNum(g.outOf)}` : "");
     setRescale(g?.rescale ?? true);
     setCoef(g ? fmtNum(g.coefficient) : "1");
     setDate(g?.date ?? formatISO(new Date()));
@@ -37,27 +33,26 @@ export function GradeModal() {
     setError(false);
   }, [gradeModal]);
 
-  const v = parseNum(value);
-  const o = parseNum(outOf);
+  const parsed = parseGradeInput(note);
   const c = parseNum(coef);
 
   function validate(): string | null {
-    if (v === null) return value.trim() ? "La note doit être un nombre." : null;
-    if (o === null || o <= 0) return "Le barème doit être un nombre positif.";
-    if (v < 0) return "La note ne peut pas être négative.";
-    if (v > o) return `La note dépasse le barème (${fmtNum(o)}).`;
+    if (!note.trim()) return null;
+    if (!parsed) return "Écris la note comme sur Pronote : 15,50/17, ou 15,5 si elle est sur 20.";
+    if (parsed.outOf <= 0) return "Le barème doit être un nombre positif.";
+    if (parsed.value > parsed.outOf) return `La note dépasse son barème (${fmtNum(parsed.outOf)}).`;
     if (c === null || c <= 0) return "Le coefficient doit être un nombre positif.";
     if (!date) return "Choisis une date.";
     return null;
   }
   const message = validate();
-  const valid = v !== null && message === null;
+  const valid = parsed !== null && message === null;
 
   async function handleSubmit() {
-    if (!valid || saving || !gradeModal || v === null || o === null || c === null) return;
+    if (!valid || saving || !gradeModal || !parsed || c === null) return;
     setSaving(true);
     setError(false);
-    const data = { title: title.trim(), value: v, outOf: o, rescale, coefficient: c, date };
+    const data = { title: title.trim(), value: parsed.value, outOf: parsed.outOf, rescale, coefficient: c, date };
     try {
       if (editing) await updateGrade(uid, editing.id, data);
       else await addGrade(uid, gradeModal.subjectId, data);
@@ -97,19 +92,12 @@ export function GradeModal() {
         />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: 8 }}>
         <div>
-          <label htmlFor="grade-value" style={LABEL}>Note</label>
+          <label htmlFor="grade-value" style={LABEL}>Note, comme sur Pronote</label>
           <input
-            id="grade-value" type="text" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)}
-            placeholder="15,5" style={INPUT} {...focusRing} onKeyDown={onEnter}
-          />
-        </div>
-        <div>
-          <label htmlFor="grade-outof" style={LABEL}>Sur</label>
-          <input
-            id="grade-outof" type="text" inputMode="decimal" value={outOf} onChange={(e) => setOutOf(e.target.value)}
-            style={INPUT} {...focusRing} onKeyDown={onEnter}
+            id="grade-value" type="text" inputMode="decimal" value={note} onChange={(e) => setNote(e.target.value)}
+            placeholder="15,50/17" style={INPUT} {...focusRing} onKeyDown={onEnter}
           />
         </div>
         <div>
@@ -121,7 +109,7 @@ export function GradeModal() {
         </div>
       </div>
 
-      {o !== null && o > 0 && o !== 20 && (
+      {parsed && parsed.outOf > 0 && parsed.outOf !== 20 && (
         <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
           <input
             type="checkbox" checked={rescale} onChange={(e) => setRescale(e.target.checked)}
@@ -130,7 +118,7 @@ export function GradeModal() {
           <span>
             <span style={{ display: "block", fontSize: 13, color: "var(--color-text-primary)" }}>Ramener sur 20</span>
             <span style={{ display: "block", fontSize: 11, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
-              Laisse coché si cette note a un (r) dans le détail du calcul Pronote. Sans (r), elle compte au prorata de son barème : elle pèse {o < 20 ? "moins" : "plus"} qu&apos;une note sur 20.
+              Laisse coché si cette note a un (r) dans le détail du calcul Pronote. Sans (r), elle compte au prorata de son barème : elle pèse {parsed.outOf < 20 ? "moins" : "plus"} qu&apos;une note sur 20.
             </span>
           </span>
         </label>

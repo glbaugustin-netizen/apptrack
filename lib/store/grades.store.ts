@@ -200,6 +200,15 @@ export function fmtDate(iso: string, opts: Intl.DateTimeFormatOptions = { day: "
   return new Date(iso + "T12:00:00").toLocaleDateString("fr-FR", opts);
 }
 
+/** Note tapée comme sur Pronote : « 15,50/17 » → 15,5 sur 17, « 15,5 » → sur 20. null si illisible. */
+export function parseGradeInput(s: string): { value: number; outOf: number } | null {
+  const [left, right, ...rest] = s.split("/");
+  if (rest.length) return null;
+  const value = parseNum(left ?? "");
+  const outOf = right === undefined ? 20 : parseNum(right);
+  return value === null || outOf === null ? null : { value, outOf };
+}
+
 /** Accepte "15,5" comme "15.5" ; null si la saisie n'est pas un nombre. */
 export function parseNum(s: string): number | null {
   const t = s.trim().replace(",", ".");
