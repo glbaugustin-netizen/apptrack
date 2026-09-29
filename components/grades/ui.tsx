@@ -28,9 +28,11 @@ export const INPUT: CSSProperties = {
   outline: "none",
 };
 
+type Field = HTMLInputElement | HTMLTextAreaElement;
+
 export const focusRing = {
-  onFocus: (e: FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.boxShadow = `0 0 0 2px ${ACCENT}33`; },
-  onBlur: (e: FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = "var(--color-border-secondary)"; e.currentTarget.style.boxShadow = "none"; },
+  onFocus: (e: FocusEvent<Field>) => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.boxShadow = `0 0 0 2px ${ACCENT}33`; },
+  onBlur: (e: FocusEvent<Field>) => { e.currentTarget.style.borderColor = "var(--color-border-secondary)"; e.currentTarget.style.boxShadow = "none"; },
 };
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { icon?: string };

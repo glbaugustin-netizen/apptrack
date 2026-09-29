@@ -121,7 +121,7 @@ function GradeRow({ grade, prev, href, first }: { grade: Grade; prev: Grade | nu
 export default function SubjectPage({ params }: { params: { subjectId: string } }) {
   const router = useRouter();
   const uid = useAuthStore((s) => s.user?.uid ?? "");
-  const { subjects, grades, loaded, openSubjectModal, openGradeModal, deleteSubject } = useGradesStore();
+  const { subjects, grades, loaded, openSubjectModal, openGradeModal, openPronoteModal, deleteSubject } = useGradesStore();
   const [leaving, setLeaving] = useState(false);
 
   const subject = subjects.find((s) => s.id === params.subjectId);
@@ -188,6 +188,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <SecondaryButton icon="ti-edit" onClick={() => openSubjectModal(subject)} title="Modifier la matière" aria-label="Modifier la matière" style={{ padding: "6px 8px" }} />
           <ConfirmDeleteButton iconOnly label="Supprimer la matière et toutes ses notes" confirmLabel="Confirmer la suppression" onConfirm={handleDelete} />
+          <SecondaryButton icon="ti-refresh" onClick={() => openPronoteModal(subjectId)} title="Coller le détail du calcul de Pronote">Pronote</SecondaryButton>
           <PrimaryButton icon="ti-plus" onClick={() => openGradeModal(subjectId)}>Ajouter une note</PrimaryButton>
         </div>
       </div>
@@ -196,8 +197,13 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
         <PageMessage
           icon="ti-chart-line"
           title={`Aucune note en ${subject.name}`}
-          text="Ajoute tes notes pour suivre ton évolution d'une éval à l'autre et noter ce que tu dois revoir."
-          action={<PrimaryButton icon="ti-plus" onClick={() => openGradeModal(subjectId)}>Ajouter une note</PrimaryButton>}
+          text="Ajoute tes notes pour suivre ton évolution d'une éval à l'autre et noter ce que tu dois revoir, ou colle le détail du calcul de Pronote."
+          action={
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+              <PrimaryButton icon="ti-plus" onClick={() => openGradeModal(subjectId)}>Ajouter une note</PrimaryButton>
+              <SecondaryButton icon="ti-refresh" onClick={() => openPronoteModal(subjectId)}>Coller le calcul Pronote</SecondaryButton>
+            </div>
+          }
         />
       ) : (
         <>

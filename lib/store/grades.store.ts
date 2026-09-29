@@ -8,6 +8,13 @@ function makeId() { return Math.random().toString(36).slice(2, 10); }
 export type SubjectInput = Pick<Subject, "name" | "color" | "coefficient">;
 export type GradeInput = Pick<Grade, "title" | "value" | "outOf" | "rescale" | "coefficient" | "date">;
 
+/** Modifications à appliquer d'un coup (synchro avec le calcul Pronote). */
+export interface GradeSync {
+  update: { id: string; updates: Pick<Grade, "outOf" | "coefficient" | "rescale"> }[];
+  create: GradeInput[];
+  remove: string[];
+}
+
 interface GradesState {
   subjects: Subject[];
   grades: Grade[];
@@ -15,12 +22,16 @@ interface GradesState {
   loadError: boolean;
   subjectModal: { editing: Subject | null } | null;
   gradeModal: { subjectId: string; editing: Grade | null } | null;
+  pronoteModal: { subjectId: string } | null;
 
   load: (uid: string) => Promise<void>;
   openSubjectModal: (subject?: Subject) => void;
   closeSubjectModal: () => void;
   openGradeModal: (subjectId: string, grade?: Grade) => void;
   closeGradeModal: () => void;
+  openPronoteModal: (subjectId: string) => void;
+  closePronoteModal: () => void;
+  syncGrades: (uid: string, subjectId: string, sync: GradeSync) => Promise<void>;
   addSubject: (uid: string, data: SubjectInput) => Promise<string>;
   updateSubject: (uid: string, id: string, updates: SubjectInput) => Promise<void>;
   deleteSubject: (uid: string, id: string) => Promise<void>;
@@ -36,6 +47,7 @@ export const useGradesStore = create<GradesState>((set, get) => ({
   loadError: false,
   subjectModal: null,
   gradeModal: null,
+  pronoteModal: null,
 
   load: async (uid) => {
     try {
@@ -59,6 +71,28 @@ export const useGradesStore = create<GradesState>((set, get) => ({
   closeSubjectModal: () => set({ subjectModal: null }),
   openGradeModal: (subjectId, grade) => set({ gradeModal: { subjectId, editing: grade ?? null } }),
   closeGradeModal: () => set({ gradeModal: null }),
+  openPronoteModal: (subjectId) => set({ pronoteModal: { subjectId } }),
+  closePronoteModal: () => set({ pronoteModal: null }),
+
+  // Tout part dans un seul lot Firestore : soit tout est enregistré, soit rien
+  syncGrades: async (uid, subjectId, sync) => {
+    const now = new Date().toISOString();
+    const created: Grade[] = sync.create.map((data) => ({ id: makeId(), subjectId, ...data, review: "", notes: "", createdAt: now }));
+    const batch = writeBatch(db);
+    sync.update.forEach(({ id, updates }) => batch.update(doc(db, "users", uid, "grades", id), updates));
+    created.forEach((g) => batch.set(doc(db, "users", uid, "grades", g.id), g));
+    sync.remove.forEach((id) => batch.delete(doc(db, "users", uid, "grades", id)));
+    await batch.commit();
+
+    const updates = new Map(sync.update.map((u) => [u.id, u.updates]));
+    const removed = new Set(sync.remove);
+    set((s) => ({
+      grades: [
+        ...s.grades.filter((g) => !removed.has(g.id)).map((g) => ({ ...g, ...updates.get(g.id) })),
+        ...created,
+      ],
+    }));
+  },
 
   addSubject: async (uid, data) => {
     const id = makeId();
