@@ -16,6 +16,7 @@ export function GradeModal() {
   const [title, setTitle] = useState("");
   const [note, setNote] = useState(""); // « 15,50/17 », comme affiché sur Pronote
   const [rescale, setRescale] = useState(true);
+  const [optional, setOptional] = useState(false);
   const [coef, setCoef] = useState("1");
   const [date, setDate] = useState("");
   const [saving, setSaving] = useState(false);
@@ -27,6 +28,7 @@ export function GradeModal() {
     setTitle(g?.title ?? "");
     setNote(g ? `${fmtNum(g.value)}/${fmtNum(g.outOf)}` : "");
     setRescale(g?.rescale ?? true);
+    setOptional(g?.optional ?? false);
     setCoef(g ? fmtNum(g.coefficient) : "1");
     setDate(g?.date ?? formatISO(new Date()));
     setSaving(false);
@@ -52,7 +54,7 @@ export function GradeModal() {
     if (!valid || saving || !gradeModal || !parsed || c === null) return;
     setSaving(true);
     setError(false);
-    const data = { title: title.trim(), value: parsed.value, outOf: parsed.outOf, rescale, coefficient: c, date };
+    const data = { title: title.trim(), value: parsed.value, outOf: parsed.outOf, rescale, optional, coefficient: c, date };
     try {
       if (editing) await updateGrade(uid, editing.id, data);
       else await addGrade(uid, gradeModal.subjectId, data);
@@ -123,6 +125,19 @@ export function GradeModal() {
           </span>
         </label>
       )}
+
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
+        <input
+          type="checkbox" checked={optional} onChange={(e) => setOptional(e.target.checked)}
+          style={{ width: 16, height: 16, margin: "2px 0 0", accentColor: ACCENT, cursor: "pointer", flexShrink: 0 }}
+        />
+        <span>
+          <span style={{ display: "block", fontSize: 13, color: "var(--color-text-primary)" }}>Facultative</span>
+          <span style={{ display: "block", fontSize: 11, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+            Coche si le devoir est facultatif sur Pronote : la note ne compte que si elle fait monter ta moyenne.
+          </span>
+        </span>
+      </label>
 
       <div>
         <label htmlFor="grade-date" style={LABEL}>Date</label>

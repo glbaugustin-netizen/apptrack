@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useGradesStore, subjectAverage, sortGrades, onTwenty, gradeTitle, fmtAvg, fmtNum, fmtDate } from "@/lib/store/grades.store";
+import { useGradesStore, subjectAverage, countedGrades, sortGrades, onTwenty, gradeTitle, fmtAvg, fmtNum, fmtDate } from "@/lib/store/grades.store";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { NoteArea } from "@/components/grades/NoteArea";
 import { CARD, ConfirmDeleteButton, Delta, PageLoading, PageMessage, SecondaryButton } from "@/components/grades/ui";
@@ -97,6 +97,13 @@ export default function GradePage({ params }: { params: { subjectId: string; gra
           {grade.outOf !== 20 && (
             <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 2 }}>
               soit {fmtNum(value)}/20{!grade.rescale && " · compte au prorata du barème"}
+            </div>
+          )}
+          {grade.optional && (
+            <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 2 }}>
+              {countedGrades(list).some((g) => g.id === gradeId)
+                ? "Facultative : elle compte, car elle fait monter ta moyenne"
+                : "Facultative : elle ne compte pas, elle ferait baisser ta moyenne"}
             </div>
           )}
         </div>

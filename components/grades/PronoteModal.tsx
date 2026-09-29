@@ -63,6 +63,8 @@ export function PronoteModal() {
   const current = sortGrades(grades.filter((g) => g.subjectId === subjectId)).reverse(); // plus récente d'abord, comme Pronote
   const parsed = text.trim() ? parsePronoteCalculation(text) : null;
   const plan = parsed?.ok ? planPronoteSync(parsed.terms, current) : null;
+  // Une note facultative qui ne compte pas peut manquer dans le calcul Pronote : on ne propose pas de la supprimer
+  const extras = plan ? plan.extras.filter((g) => !g.optional) : [];
 
   let sync: GradeSync | null = null;
   let resultAverage: number | null = null;
@@ -70,8 +72,8 @@ export function PronoteModal() {
     const today = formatISO(new Date());
     const next: GradeSync = {
       update: plan.rows.flatMap((r) => (r.grade && r.changes.length ? [{ id: r.grade.id, updates: { outOf: r.term.outOf, coefficient: r.term.coefficient, rescale: r.term.rescale } }] : [])),
-      create: plan.rows.filter((r) => !r.grade).reverse().map((r) => ({ title: `Note Pronote (${fmtNum(r.term.value)}/${fmtNum(r.term.outOf)})`, date: today, ...r.term })),
-      remove: removeExtras ? plan.extras.map((g) => g.id) : [],
+      create: plan.rows.filter((r) => !r.grade).reverse().map((r) => ({ title: `Note Pronote (${fmtNum(r.term.value)}/${fmtNum(r.term.outOf)})`, date: today, optional: false, ...r.term })),
+      remove: removeExtras ? extras.map((g) => g.id) : [],
     };
     const updated = new Map(next.update.map((u) => [u.id, u.updates]));
     const kept = current.filter((g) => !next.remove.includes(g.id)).map((g) => ({ ...g, ...updated.get(g.id) }));
@@ -137,15 +139,15 @@ export function PronoteModal() {
             {plan.rows.map((row, i) => <RowView key={i} row={row} />)}
           </div>
 
-          {plan.extras.length > 0 && (
+          {extras.length > 0 && (
             <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer", marginTop: 4 }}>
               <input
                 type="checkbox" checked={removeExtras} onChange={(e) => setRemoveExtras(e.target.checked)}
                 style={{ width: 16, height: 16, margin: "2px 0 0", accentColor: ACCENT, cursor: "pointer", flexShrink: 0 }}
               />
               <span style={{ fontSize: 12, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
-                Supprimer {plan.extras.length > 1 ? `les ${plan.extras.length} notes absentes` : "la note absente"} du calcul Pronote :{" "}
-                {plan.extras.map((g) => `${gradeTitle(g)} (${fmtNum(g.value)}/${fmtNum(g.outOf)})`).join(", ")}
+                Supprimer {extras.length > 1 ? `les ${extras.length} notes absentes` : "la note absente"} du calcul Pronote :{" "}
+                {extras.map((g) => `${gradeTitle(g)} (${fmtNum(g.value)}/${fmtNum(g.outOf)})`).join(", ")}
               </span>
             </label>
           )}

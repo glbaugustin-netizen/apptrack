@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useGradesStore, subjectAverage, sortGrades, onTwenty, gradeTitle, fmtAvg, fmtNum, fmtDate } from "@/lib/store/grades.store";
+import { useGradesStore, subjectAverage, countedGrades, sortGrades, onTwenty, gradeTitle, fmtAvg, fmtNum, fmtDate } from "@/lib/store/grades.store";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { Grade } from "@/lib/types/grade.types";
 import { GradeEvolutionChart, EvolutionLegend, type EvolutionPoint } from "@/components/grades/GradeEvolutionChart";
@@ -81,7 +81,7 @@ function gapWith(grade: Grade, prev: Grade): number {
   return grade.outOf === prev.outOf ? grade.value - prev.value : onTwenty(grade) - onTwenty(prev);
 }
 
-function GradeRow({ grade, prev, href, first }: { grade: Grade; prev: Grade | null; href: string; first: boolean }) {
+function GradeRow({ grade, prev, href, first, counted }: { grade: Grade; prev: Grade | null; href: string; first: boolean; counted: boolean }) {
   const reviewLine = grade.review.trim().split("\n")[0];
   return (
     <Link
@@ -94,12 +94,14 @@ function GradeRow({ grade, prev, href, first }: { grade: Grade; prev: Grade | nu
         {fmtDate(grade.date)}
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 13, color: "var(--color-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {/* Les étiquettes passent à la ligne plutôt que d'écraser le titre */}
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "2px 6px" }}>
+          <span style={{ maxWidth: "100%", fontSize: 13, color: "var(--color-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {gradeTitle(grade)}
           </span>
           {grade.coefficient !== 1 && <Pill>coef {fmtNum(grade.coefficient)}</Pill>}
           {!grade.rescale && grade.outOf !== 20 && <Pill>non ramenée sur 20</Pill>}
+          {grade.optional && <Pill>{counted ? "facultative" : "facultative · non comptée"}</Pill>}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: reviewLine ? "var(--color-text-secondary)" : "var(--color-text-tertiary)", overflow: "hidden", whiteSpace: "nowrap" }}>
           <i className="ti ti-target-arrow" style={{ fontSize: 12, flexShrink: 0 }} />
@@ -144,6 +146,8 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
   const subjectId = subject.id;
   const list = sortGrades(grades.filter((g) => g.subjectId === subjectId));
   const avg = subjectAverage(list);
+  const counted = countedGrades(list);
+  const countedIds = new Set(counted.map((g) => g.id));
 
   // Moyenne cumulée après chaque éval
   const points: EvolutionPoint[] = list.map((g, i) => ({
@@ -219,7 +223,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
             <Tile label="Évaluations" value={String(list.length)} sub={`depuis le ${fmtDate(list[0].date)}`} />
           </div>
 
-          <CalculationDetail grades={[...list].reverse()} average={avg} />
+          <CalculationDetail grades={sortGrades(counted).reverse()} average={avg} />
 
           <div style={CARD}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
@@ -237,7 +241,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
               .map((g, i) => ({ grade: g, prev: i > 0 ? list[i - 1] : null }))
               .reverse()
               .map(({ grade, prev: before }, i) => (
-                <GradeRow key={grade.id} grade={grade} prev={before} href={`/grades/${subjectId}/${grade.id}`} first={i === 0} />
+                <GradeRow key={grade.id} grade={grade} prev={before} href={`/grades/${subjectId}/${grade.id}`} first={i === 0} counted={countedIds.has(grade.id)} />
               ))}
           </div>
         </>

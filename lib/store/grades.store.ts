@@ -6,7 +6,7 @@ import { Grade, Subject } from "@/lib/types/grade.types";
 function makeId() { return Math.random().toString(36).slice(2, 10); }
 
 export type SubjectInput = Pick<Subject, "name" | "color" | "coefficient">;
-export type GradeInput = Pick<Grade, "title" | "value" | "outOf" | "rescale" | "coefficient" | "date">;
+export type GradeInput = Pick<Grade, "title" | "value" | "outOf" | "rescale" | "optional" | "coefficient" | "date">;
 
 /** Modifications à appliquer d'un coup (synchro avec le calcul Pronote). */
 export interface GradeSync {
@@ -57,7 +57,7 @@ export const useGradesStore = create<GradesState>((set, get) => ({
       ]);
       set({
         subjects: subjectSnap.docs.map((d) => ({ coefficient: 1, ...d.data() } as Subject)),
-        grades: gradeSnap.docs.map((d) => ({ title: "", outOf: 20, rescale: true, coefficient: 1, review: "", notes: "", ...d.data() } as Grade)),
+        grades: gradeSnap.docs.map((d) => ({ title: "", outOf: 20, rescale: true, optional: false, coefficient: 1, review: "", notes: "", ...d.data() } as Grade)),
         loaded: true,
         loadError: false,
       });
@@ -145,7 +145,7 @@ export function onTwenty(g: Pick<Grade, "value" | "outOf">): number {
  * somme(coef × note) / somme(coef × barème) × 20, où une note « ramenée sur 20 »
  * compte comme une note sur 20 et les autres au prorata de leur barème.
  */
-export function subjectAverage(grades: Grade[]): number | null {
+function weightedAverage(grades: Grade[]): number | null {
   let points = 0, max = 0;
   for (const g of grades) {
     const scaled = g.rescale || g.outOf === 20;
@@ -153,6 +153,29 @@ export function subjectAverage(grades: Grade[]): number | null {
     max += g.coefficient * (scaled ? 20 : g.outOf);
   }
   return max > 0 ? (points / max) * 20 : null;
+}
+
+/**
+ * Notes qui comptent dans la moyenne, comme Pronote : une note facultative ne compte
+ * que si elle fait monter la moyenne. Sans note obligatoire, le réglage ne s'applique
+ * pas et tout compte (le « (nf) » de Pronote).
+ */
+export function countedGrades(grades: Grade[]): Grade[] {
+  const required = grades.filter((g) => !g.optional);
+  const optional = grades.filter((g) => g.optional);
+  if (required.length === 0 || optional.length === 0) return grades;
+  let counted = required;
+  let average = weightedAverage(counted) ?? 0;
+  // Les meilleures d'abord : chacune n'est gardée que si elle améliore la moyenne obtenue
+  for (const g of optional.slice().sort((a, b) => onTwenty(b) - onTwenty(a))) {
+    const next = weightedAverage([...counted, g]) ?? 0;
+    if (next > average) { counted = [...counted, g]; average = next; }
+  }
+  return counted;
+}
+
+export function subjectAverage(grades: Grade[]): number | null {
+  return weightedAverage(countedGrades(grades));
 }
 
 /** Moyenne générale /20 pondérée par les coefficients des matières qui ont au moins une note. */
