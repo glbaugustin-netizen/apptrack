@@ -1,4 +1,4 @@
-export type ModuleId = "habits" | "work" | "calendar" | "tracker";
+export type ModuleId = "habits" | "work" | "calendar" | "tracker" | "grades";
 
 export interface Module {
   id: ModuleId;
@@ -46,6 +46,15 @@ export const MODULES: Module[] = [
     accentPastel: "#E1F5EE",
     accentDark: "#0F6E56",
     path: "/tracker",
+  },
+  {
+    id: "grades",
+    label: "Tracking",
+    icon: "ti-school",
+    accent: "#D4537E",
+    accentPastel: "#FBEAF0",
+    accentDark: "#993556",
+    path: "/grades",
   },
 ];
 
