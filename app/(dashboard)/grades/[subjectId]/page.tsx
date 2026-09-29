@@ -30,6 +30,14 @@ function Tile({ label, value, unit, sub }: { label: string; value: string; unit?
   );
 }
 
+function Pill({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 20, background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", whiteSpace: "nowrap", flexShrink: 0 }}>
+      {children}
+    </span>
+  );
+}
+
 /** Écart avec l'éval précédente, dans le barème de la note quand les deux ont le même. */
 function gapWith(grade: Grade, prev: Grade): number {
   return grade.outOf === prev.outOf ? grade.value - prev.value : onTwenty(grade) - onTwenty(prev);
@@ -52,11 +60,8 @@ function GradeRow({ grade, prev, href, first }: { grade: Grade; prev: Grade | nu
           <span style={{ fontSize: 13, color: "var(--color-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {gradeTitle(grade)}
           </span>
-          {grade.coefficient !== 1 && (
-            <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 20, background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", whiteSpace: "nowrap", flexShrink: 0 }}>
-              coef {fmtNum(grade.coefficient)}
-            </span>
-          )}
+          {grade.coefficient !== 1 && <Pill>coef {fmtNum(grade.coefficient)}</Pill>}
+          {!grade.rescale && grade.outOf !== 20 && <Pill>non ramenée sur 20</Pill>}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: reviewLine ? "var(--color-text-secondary)" : "var(--color-text-tertiary)", overflow: "hidden", whiteSpace: "nowrap" }}>
           <i className="ti ti-target-arrow" style={{ fontSize: 12, flexShrink: 0 }} />
@@ -103,24 +108,21 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
   const avg = subjectAverage(list);
 
   // Moyenne cumulée après chaque éval
-  let sum = 0, weight = 0;
-  const points: EvolutionPoint[] = list.map((g) => {
-    sum += onTwenty(g) * g.coefficient;
-    weight += g.coefficient;
-    return {
-      id: g.id,
-      title: gradeTitle(g),
-      date: g.date,
-      value: onTwenty(g),
-      raw: g.outOf !== 20 ? `${fmtNum(g.value)}/${fmtNum(g.outOf)}` : null,
-      average: sum / weight,
-    };
-  });
+  const points: EvolutionPoint[] = list.map((g, i) => ({
+    id: g.id,
+    title: gradeTitle(g),
+    date: g.date,
+    value: onTwenty(g),
+    raw: g.outOf !== 20 ? `${fmtNum(g.value)}/${fmtNum(g.outOf)}` : null,
+    average: subjectAverage(list.slice(0, i + 1)) ?? 0,
+  }));
 
   const last = list[list.length - 1];
   const prev = list[list.length - 2];
   const best = list.length ? list.reduce((a, b) => (onTwenty(b) > onTwenty(a) ? b : a)) : null;
-  const weighted = list.some((g) => g.coefficient !== 1);
+  const byCoef = list.some((g) => g.coefficient !== 1);
+  const byScale = list.some((g) => !g.rescale && g.outOf !== 20);
+  const averageNote = byCoef && byScale ? "pondérée par coef. et barèmes" : byCoef ? "pondérée par les coef." : byScale ? "pondérée par les barèmes" : `sur ${list.length} éval${list.length > 1 ? "s" : ""}`;
 
   function handleDelete() {
     setLeaving(true);
@@ -162,7 +164,7 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
       ) : (
         <>
           <div className="grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
-            <Tile label="Moyenne" value={fmtAvg(avg)} unit="/ 20" sub={weighted ? "pondérée par les coef." : `sur ${list.length} éval${list.length > 1 ? "s" : ""}`} />
+            <Tile label="Moyenne" value={fmtAvg(avg)} unit="/ 20" sub={averageNote} />
             <Tile
               label="Dernière note"
               value={fmtNum(onTwenty(last))}

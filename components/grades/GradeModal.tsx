@@ -5,7 +5,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useGradesStore, fmtNum, parseNum, sortGrades } from "@/lib/store/grades.store";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { formatISO } from "@/lib/utils/date";
-import { INPUT, LABEL, focusRing, PrimaryButton, SecondaryButton } from "./ui";
+import { ACCENT, INPUT, LABEL, focusRing, PrimaryButton, SecondaryButton } from "./ui";
 
 export function GradeModal() {
   const { gradeModal, subjects, closeGradeModal, addGrade, updateGrade } = useGradesStore();
@@ -16,6 +16,7 @@ export function GradeModal() {
   const [title, setTitle] = useState("");
   const [value, setValue] = useState("");
   const [outOf, setOutOf] = useState("20");
+  const [rescale, setRescale] = useState(true);
   const [coef, setCoef] = useState("1");
   const [date, setDate] = useState("");
   const [saving, setSaving] = useState(false);
@@ -29,6 +30,7 @@ export function GradeModal() {
     setTitle(g?.title ?? "");
     setValue(g ? fmtNum(g.value) : "");
     setOutOf(fmtNum(g?.outOf ?? previous?.outOf ?? 20));
+    setRescale(g?.rescale ?? true);
     setCoef(g ? fmtNum(g.coefficient) : "1");
     setDate(g?.date ?? formatISO(new Date()));
     setSaving(false);
@@ -55,7 +57,7 @@ export function GradeModal() {
     if (!valid || saving || !gradeModal || v === null || o === null || c === null) return;
     setSaving(true);
     setError(false);
-    const data = { title: title.trim(), value: v, outOf: o, coefficient: c, date };
+    const data = { title: title.trim(), value: v, outOf: o, rescale, coefficient: c, date };
     try {
       if (editing) await updateGrade(uid, editing.id, data);
       else await addGrade(uid, gradeModal.subjectId, data);
@@ -118,6 +120,21 @@ export function GradeModal() {
           />
         </div>
       </div>
+
+      {o !== null && o > 0 && o !== 20 && (
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
+          <input
+            type="checkbox" checked={rescale} onChange={(e) => setRescale(e.target.checked)}
+            style={{ width: 16, height: 16, margin: "2px 0 0", accentColor: ACCENT, cursor: "pointer", flexShrink: 0 }}
+          />
+          <span>
+            <span style={{ display: "block", fontSize: 13, color: "var(--color-text-primary)" }}>Ramener sur 20</span>
+            <span style={{ display: "block", fontSize: 11, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+              Même option que sur Pronote. Décochée, la note compte au prorata de son barème : elle pèse {o < 20 ? "moins" : "plus"} qu&apos;une note sur 20.
+            </span>
+          </span>
+        </label>
+      )}
 
       <div>
         <label htmlFor="grade-date" style={LABEL}>Date</label>

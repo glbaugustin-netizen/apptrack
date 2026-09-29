@@ -95,7 +95,9 @@ export default function GradePage({ params }: { params: { subjectId: string; gra
             <span style={{ fontSize: 15, color: "var(--color-text-secondary)" }}>/ {fmtNum(grade.outOf)}</span>
           </div>
           {grade.outOf !== 20 && (
-            <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 2 }}>soit {fmtNum(value)}/20</div>
+            <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 2 }}>
+              soit {fmtNum(value)}/20{!grade.rescale && " · compte au prorata du barème"}
+            </div>
           )}
         </div>
         {list.length > 1 && (

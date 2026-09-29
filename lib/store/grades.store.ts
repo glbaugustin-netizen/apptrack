@@ -6,7 +6,7 @@ import { Grade, Subject } from "@/lib/types/grade.types";
 function makeId() { return Math.random().toString(36).slice(2, 10); }
 
 export type SubjectInput = Pick<Subject, "name" | "color" | "coefficient">;
-export type GradeInput = Pick<Grade, "title" | "value" | "outOf" | "coefficient" | "date">;
+export type GradeInput = Pick<Grade, "title" | "value" | "outOf" | "rescale" | "coefficient" | "date">;
 
 interface GradesState {
   subjects: Subject[];
@@ -45,7 +45,7 @@ export const useGradesStore = create<GradesState>((set, get) => ({
       ]);
       set({
         subjects: subjectSnap.docs.map((d) => ({ coefficient: 1, ...d.data() } as Subject)),
-        grades: gradeSnap.docs.map((d) => ({ title: "", outOf: 20, coefficient: 1, review: "", notes: "", ...d.data() } as Grade)),
+        grades: gradeSnap.docs.map((d) => ({ title: "", outOf: 20, rescale: true, coefficient: 1, review: "", notes: "", ...d.data() } as Grade)),
         loaded: true,
         loadError: false,
       });
@@ -106,11 +106,19 @@ export function onTwenty(g: Pick<Grade, "value" | "outOf">): number {
   return (g.value / g.outOf) * 20;
 }
 
-/** Moyenne /20 pondérée par les coefficients des notes, null s'il n'y a aucune note. */
+/**
+ * Moyenne /20 calculée comme Pronote, null s'il n'y a aucune note :
+ * somme(coef × note) / somme(coef × barème) × 20, où une note « ramenée sur 20 »
+ * compte comme une note sur 20 et les autres au prorata de leur barème.
+ */
 export function subjectAverage(grades: Grade[]): number | null {
-  let sum = 0, weight = 0;
-  for (const g of grades) { sum += onTwenty(g) * g.coefficient; weight += g.coefficient; }
-  return weight > 0 ? sum / weight : null;
+  let points = 0, max = 0;
+  for (const g of grades) {
+    const scaled = g.rescale || g.outOf === 20;
+    points += g.coefficient * (scaled ? onTwenty(g) : g.value);
+    max += g.coefficient * (scaled ? 20 : g.outOf);
+  }
+  return max > 0 ? (points / max) * 20 : null;
 }
 
 /** Moyenne générale /20 pondérée par les coefficients des matières qui ont au moins une note. */

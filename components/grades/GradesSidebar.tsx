@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useGradesStore, subjectAverage, sortSubjects } from "@/lib/store/grades.store";
+import { useGradesStore, subjectAverage, sortSubjects, fmtAvg } from "@/lib/store/grades.store";
 import { useUIStore } from "@/lib/store/ui.store";
 import { ACCENT } from "./ui";
 
@@ -60,7 +60,7 @@ export function GradesSidebar() {
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
             <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
             <span className="tabular-nums" style={{ fontSize: 11, color: "var(--color-text-secondary)", fontWeight: 400, flexShrink: 0 }}>
-              {avg !== null ? avg.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "—"}
+              {avg !== null ? fmtAvg(avg) : "—"}
             </span>
           </Link>
         );
