@@ -38,6 +38,44 @@ function Pill({ children }: { children: React.ReactNode }) {
   );
 }
 
+const fmt2 = (n: number) => n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** Formule écrite comme dans le détail du calcul de Pronote, pour comparer terme à terme. */
+function CalculationDetail({ grades, average }: { grades: Grade[]; average: number }) {
+  const [open, setOpen] = useState(false);
+  const scaled = (g: Grade) => g.rescale || g.outOf === 20;
+  const coef = (g: Grade) => (g.coefficient !== 1 ? `×${fmt2(g.coefficient)}` : "");
+  const numerator = grades.map((g) => `${fmt2(g.value)}${coef(g)}${scaled(g) && g.outOf !== 20 ? `×20/${fmtNum(g.outOf)}(r)` : ""}`).join(" + ");
+  const denominator = grades.map((g) => `${scaled(g) ? "20" : fmtNum(g.outOf)}${coef(g)}`).join(" + ");
+
+  return (
+    <div style={CARD}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", color: "var(--color-text-secondary)" }}
+      >
+        <span style={CARD_TITLE}>Détail du calcul</span>
+        <i className={`ti ti-chevron-${open ? "up" : "down"}`} style={{ fontSize: 16 }} />
+      </button>
+      {open && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--color-text-primary)" }}>
+            <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+              <span style={{ padding: "0 2px 4px" }}>{numerator}</span>
+              <span style={{ padding: "4px 2px 0", borderTop: "1px solid var(--color-border-secondary)" }}>{denominator}</span>
+            </div>
+            <span style={{ whiteSpace: "nowrap" }}>× 20 = <strong style={{ fontWeight: 500 }}>{fmtAvg(average)}</strong></span>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 10 }}>
+            (r) note ramenée sur 20 · même écriture que le détail du calcul de Pronote
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Écart avec l'éval précédente, dans le barème de la note quand les deux ont le même. */
 function gapWith(grade: Grade, prev: Grade): number {
   return grade.outOf === prev.outOf ? grade.value - prev.value : onTwenty(grade) - onTwenty(prev);
@@ -174,6 +212,8 @@ export default function SubjectPage({ params }: { params: { subjectId: string } 
             <Tile label="Meilleure note" value={fmtNum(onTwenty(best))} unit="/ 20" sub={gradeTitle(best)} />
             <Tile label="Évaluations" value={String(list.length)} sub={`depuis le ${fmtDate(list[0].date)}`} />
           </div>
+
+          <CalculationDetail grades={[...list].reverse()} average={avg} />
 
           <div style={CARD}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
