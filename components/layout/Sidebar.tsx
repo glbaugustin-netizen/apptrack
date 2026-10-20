@@ -8,6 +8,7 @@ import { WorkSidebar } from "@/components/work/WorkSidebar";
 import { CalendarSidebar } from "@/components/calendar/CalendarSidebar";
 import { TrackerSidebar } from "@/components/tracker/TrackerSidebar";
 import { GradesSidebar } from "@/components/grades/GradesSidebar";
+import { SkillsSidebar } from "@/components/skills/SkillsSidebar";
 
 interface SidebarItemProps {
   href: string;
@@ -149,6 +150,7 @@ export function Sidebar({ activeModule }: SidebarProps) {
       {activeModule.id === "calendar" && <CalendarSidebar />}
       {activeModule.id === "tracker" && <TrackerSidebar />}
       {activeModule.id === "grades" && <GradesSidebar />}
+      {activeModule.id === "skills" && <SkillsSidebar />}
     </aside>
   );
 }

@@ -13,6 +13,7 @@ import { useWorkStore } from "@/lib/store/work.store";
 import { useCalendarStore } from "@/lib/store/calendar.store";
 import { useTrackerStore } from "@/lib/store/tracker.store";
 import { useGradesStore } from "@/lib/store/grades.store";
+import { useSkillsStore } from "@/lib/store/skills.store";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -26,6 +27,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const loadCalendar = useCalendarStore((s) => s.load);
   const loadTracker = useTrackerStore((s) => s.load);
   const loadGrades = useGradesStore((s) => s.load);
+  const loadSkills = useSkillsStore((s) => s.load);
 
   useEffect(() => {
     const unsub = init((uid) => {
@@ -35,6 +37,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       loadCalendar(uid);
       loadTracker(uid);
       loadGrades(uid);
+      loadSkills(uid);
     });
     return unsub;
   }, []);
