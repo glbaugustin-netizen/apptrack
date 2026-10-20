@@ -35,6 +35,7 @@ export interface SkillLink {
   to: { x: number; y: number; angle: number };
   branchId: string;
   depth: number; // profondeur de la compétence d'arrivée
+  childId: string;
 }
 
 /** Emplacement d'un « + » autour de la bulle de départ, avec l'ordre à donner à la nouvelle branche. */
@@ -106,7 +107,7 @@ export function layoutSkillTree(skills: Skill[]): SkillTreeLayout {
       const y = Math.sin(angle) * R;
       const branch = branchId ?? kid.id;
       nodes.push({ skill: kid, depth, x, y, r, angle, branchId: branch });
-      links.push({ from: parent, to: { x, y, angle }, branchId: branch, depth });
+      links.push({ from: parent, to: { x, y, angle }, branchId: branch, depth, childId: kid.id });
       place(kid.id, depth + 1, cursor, cursor + share, { x, y, angle }, branch);
       cursor += share;
     }

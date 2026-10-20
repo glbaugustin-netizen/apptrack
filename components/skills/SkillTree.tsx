@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSkillsStore, skillWithDescendants } from "@/lib/store/skills.store";
+import { useSkillsStore, skillWithDescendants, lockedAncestor } from "@/lib/store/skills.store";
 import { layoutSkillTree, linkPath, neonColor, wrapLabel, ROOT_RADIUS } from "@/lib/skillTree";
 
 // Écran de jeu : toujours sombre, quel que soit le thème de l'app
@@ -9,6 +9,8 @@ const BG = "#06070A";
 const LOCKED = "#5C5F66";      // bulles « + » verrouillées et leurs traits
 const LOCKED_TEXT = "#B9BCC2";
 const LABEL = "#D9DBDF";
+const LOCKED_FILL = "#101217";  // bulle pas encore débloquée
+const LOCKED_LINK = "#33363D";  // branche menant à une compétence pas encore débloquée
 const GHOST_R = 12;
 const MARGIN = 40;
 const MIN_ZOOM = 0.25;
@@ -117,6 +119,8 @@ export function SkillTree({ rootLabel }: { rootLabel: string }) {
     for (const s of skills) if (s.parentId === null) map.set(s.id, neonColor(s.color));
     return map;
   }, [skills]);
+  const unlockedIds = useMemo(() => new Set(skills.filter((s) => s.unlocked).map((s) => s.id)), [skills]);
+  const hoveredNode = layout.nodes.find((n) => n.skill.id === hoveredId) ?? null;
 
   // Emplacements des « + » : autour de la bulle de départ, et au bout de chaque compétence
   const rootGhosts = layout.rootSlots.map((slot) => ({
@@ -284,10 +288,13 @@ export function SkillTree({ rootLabel }: { rootLabel: string }) {
               />
             ))}
 
-            {/* Branches néon */}
+            {/* Branches : grises tant que la compétence n'est pas débloquée, néon ensuite */}
+            {layout.links.filter((l) => !unlockedIds.has(l.childId)).map((l) => (
+              <path key={l.childId} d={linkPath(l)} fill="none" stroke={LOCKED_LINK} strokeWidth={l.depth === 1 ? 3 : 2} strokeLinecap="round" />
+            ))}
             <g filter="url(#skill-glow)">
-              {layout.links.map((l, i) => (
-                <path key={i} d={linkPath(l)} fill="none" stroke={branchColor.get(l.branchId)} strokeWidth={l.depth === 1 ? 6 : 4} strokeLinecap="round" />
+              {layout.links.filter((l) => unlockedIds.has(l.childId)).map((l) => (
+                <path key={l.childId} d={linkPath(l)} fill="none" stroke={branchColor.get(l.branchId)} strokeWidth={l.depth === 1 ? 6 : 4} strokeLinecap="round" />
               ))}
             </g>
 
@@ -302,10 +309,13 @@ export function SkillTree({ rootLabel }: { rootLabel: string }) {
 
             {/* Compétences */}
             {layout.nodes.map((n) => {
-              const color = branchColor.get(n.branchId) ?? "#FFFFFF";
+              const unlocked = n.skill.unlocked;
+              const branch = branchColor.get(n.branchId) ?? "#FFFFFF";
+              const color = unlocked ? branch : LOCKED;
               const hovered = hoveredId === n.skill.id;
               const main = n.depth === 1;
-              const count = main ? skillWithDescendants(skills, n.skill.id).length - 1 : 0;
+              const branchIds = main ? skillWithDescendants(skills, n.skill.id) : [];
+              const branchUnlocked = branchIds.filter((id) => unlockedIds.has(id)).length;
               return (
                 <g
                   key={n.skill.id}
@@ -319,18 +329,29 @@ export function SkillTree({ rootLabel }: { rootLabel: string }) {
                   onMouseLeave={() => setHoveredId(null)}
                   style={{ cursor: dragging ? "grabbing" : "pointer", outline: "none" }}
                 >
-                  <circle r={n.r + 6} fill="none" stroke={color} strokeOpacity={hovered ? 0.8 : 0.35} strokeWidth={1.5} style={{ transition: "stroke-opacity 0.12s" }} />
-                  <circle r={n.r} fill={color} filter="url(#skill-glow)" />
-                  <text textAnchor="middle" dy={n.r * 0.34} fontSize={n.r * 0.95} fontWeight={700} fill={BG} style={{ pointerEvents: "none" }}>
-                    {n.skill.name.trim().charAt(0).toUpperCase()}
-                  </text>
+                  <circle r={n.r + 6} fill="none" stroke={hovered && !unlocked ? branch : color} strokeOpacity={hovered ? 0.8 : 0.35} strokeWidth={1.5} style={{ transition: "stroke-opacity 0.12s" }} />
+                  {unlocked
+                    ? <circle r={n.r} fill={branch} filter="url(#skill-glow)" />
+                    : <circle r={n.r} fill={LOCKED_FILL} stroke={LOCKED} strokeWidth={1.5} />}
+                  {n.skill.emoji ? (
+                    <text
+                      textAnchor="middle" dy={n.r * 0.36} fontSize={n.r * 1.05}
+                      style={{ pointerEvents: "none", filter: unlocked ? undefined : "grayscale(1)", opacity: unlocked ? 1 : 0.45 }}
+                    >
+                      {n.skill.emoji}
+                    </text>
+                  ) : (
+                    <text textAnchor="middle" dy={n.r * 0.34} fontSize={n.r * 0.95} fontWeight={700} fill={unlocked ? BG : LOCKED_TEXT} style={{ pointerEvents: "none" }}>
+                      {n.skill.name.trim().charAt(0).toUpperCase()}
+                    </text>
+                  )}
                   {main ? (
                     <>
-                      <HaloText y={n.r + 24} lines={wrapLabel(n.skill.name.toUpperCase(), 14)} size={11.5} color={color} weight={700} spacing={1.4} />
-                      <HaloText y={n.r + 24 + wrapLabel(n.skill.name, 14).length * 14 + 6} lines={[String(count)]} size={18} color={color} weight={700} />
+                      <HaloText y={n.r + 24} lines={wrapLabel(n.skill.name.toUpperCase(), 14)} size={11.5} color={unlocked ? branch : LOCKED_TEXT} weight={700} spacing={1.4} />
+                      <HaloText y={n.r + 24 + wrapLabel(n.skill.name, 14).length * 14 + 6} lines={[`${branchUnlocked}/${branchIds.length}`]} size={17} color={unlocked ? branch : LOCKED_TEXT} weight={700} />
                     </>
                   ) : (
-                    <HaloText y={n.r + 18} lines={wrapLabel(n.skill.name, 14)} size={11} color={LABEL} />
+                    <HaloText y={n.r + 18} lines={wrapLabel(n.skill.name, 14)} size={11} color={unlocked ? LABEL : LOCKED_TEXT} />
                   )}
                 </g>
               );
@@ -338,6 +359,41 @@ export function SkillTree({ rootLabel }: { rootLabel: string }) {
           </g>
         </svg>
       )}
+
+      {/* Info-bulle au survol : nom, description et état */}
+      {view && !dragging && hoveredNode && (() => {
+        const n = hoveredNode;
+        const color = n.skill.unlocked ? branchColor.get(n.branchId) ?? "#FFFFFF" : LOCKED;
+        const below = v.y + (n.y - n.r) * v.k < 150; // pas la place au-dessus : on l'affiche en dessous
+        const left = clamp(v.x + n.x * v.k, 135, Math.max(135, box.width - 135));
+        const top = below ? v.y + (n.y + n.r + 14) * v.k : v.y + (n.y - n.r - 14) * v.k;
+        const blocker = n.skill.unlocked ? null : lockedAncestor(skills, n.skill.parentId);
+        return (
+          <div
+            role="tooltip"
+            style={{
+              position: "absolute", left, top, transform: below ? "translateX(-50%)" : "translate(-50%, -100%)",
+              width: 250, padding: "10px 12px", borderRadius: 10, pointerEvents: "none",
+              background: "rgba(10,11,14,0.94)", border: `1px solid ${color}`, color: LABEL, fontSize: 12, lineHeight: 1.5,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 18, filter: n.skill.unlocked ? undefined : "grayscale(1)" }}>{n.skill.emoji || n.skill.name.charAt(0).toUpperCase()}</span>
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.skill.name}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: n.skill.unlocked ? color : LOCKED_TEXT }}>
+                <i className={`ti ${n.skill.unlocked ? "ti-check" : "ti-lock"}`} style={{ fontSize: 12 }} />
+                {n.skill.unlocked ? "Débloquée" : "Verrouillée"}
+              </span>
+            </div>
+            <div style={{ whiteSpace: "pre-wrap", color: n.skill.description ? LABEL : LOCKED_TEXT, fontStyle: n.skill.description ? "normal" : "italic" }}>
+              {n.skill.description || "Pas encore de description. Clique sur la bulle pour en ajouter une."}
+            </div>
+            {blocker && blocker.id !== n.skill.id && (
+              <div style={{ marginTop: 6, fontSize: 11, color: LOCKED_TEXT }}>Débloque d&apos;abord « {blocker.name} ».</div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Zoom et recentrage */}
       <div style={{ position: "absolute", right: 12, bottom: 12, display: "flex", gap: 6 }}>

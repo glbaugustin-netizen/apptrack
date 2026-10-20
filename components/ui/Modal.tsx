@@ -46,6 +46,9 @@ export function Modal({ open, onClose, title, children, footer, maxWidth = 400 }
           border: "0.5px solid var(--color-border-tertiary)",
           width: "100%",
           maxWidth,
+          maxHeight: "calc(100dvh - 40px)",
+          display: "flex",
+          flexDirection: "column",
           overflow: "hidden",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -84,7 +87,7 @@ export function Modal({ open, onClose, title, children, footer, maxWidth = 400 }
         </div>
 
         {/* Body */}
-        <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14, overflowY: "auto", minHeight: 0 }}>
           {children}
         </div>
 
