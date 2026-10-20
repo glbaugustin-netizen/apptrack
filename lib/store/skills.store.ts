@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { collection, getDocs, doc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { HABIT_COLORS } from "@/lib/habitColors";
+import { NEON_COLORS } from "@/lib/skillTree";
 import { Skill } from "@/lib/types/skill.types";
 
 function makeId() { return Math.random().toString(36).slice(2, 10); }
@@ -35,13 +35,6 @@ export function skillWithDescendants(skills: Skill[], id: string): string[] {
   return ids;
 }
 
-/** Couleur d'une compétence : celle de sa branche (compétence principale). */
-export function skillColor(skills: Skill[], skill: Skill): string {
-  let current: Skill | undefined = skill;
-  while (current && current.parentId !== null) current = skills.find((s) => s.id === current!.parentId);
-  return current?.color || HABIT_COLORS[0].hex;
-}
-
 export const useSkillsStore = create<SkillsState>((set, get) => ({
   skills: [],
   loaded: false,
@@ -69,7 +62,7 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
       name,
       parentId,
       order: order ?? (siblings.length ? Math.max(...siblings.map((s) => s.order)) + 1 : 0),
-      color: parentId === null ? color ?? HABIT_COLORS[0].hex : "",
+      color: parentId === null ? color ?? NEON_COLORS[0] : "",
       createdAt: new Date().toISOString(),
     };
     await setDoc(doc(db, "users", uid, "skills", skill.id), skill);

@@ -3,7 +3,7 @@
 import { useSkillsStore } from "@/lib/store/skills.store";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { SkillTree } from "@/components/skills/SkillTree";
-import { SkillModal, SKILLS_ACCENT } from "@/components/skills/SkillModal";
+import { SkillModal } from "@/components/skills/SkillModal";
 import { PageLoading, PageMessage } from "@/components/grades/ui";
 
 export default function SkillsPage() {
@@ -30,8 +30,8 @@ export default function SkillsPage() {
           text="Vérifie ta connexion puis recharge la page. Si ça continue, les règles Firestore bloquent peut-être la collection skills."
         />
       ) : (
-        <div style={{ flex: 1, minHeight: 420, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", overflow: "hidden" }}>
-          <SkillTree rootLabel={firstName} accent={SKILLS_ACCENT} accentDark="#854F0B" />
+        <div style={{ flex: 1, minHeight: 420, background: "#06070A", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: "var(--border-radius-lg)", overflow: "hidden" }}>
+          <SkillTree rootLabel={firstName} />
         </div>
       )}
 

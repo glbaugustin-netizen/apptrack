@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSkillsStore, skillWithDescendants } from "@/lib/store/skills.store";
 import { useUIStore } from "@/lib/store/ui.store";
-import { HABIT_COLORS } from "@/lib/habitColors";
+import { neonColor } from "@/lib/skillTree";
 import { SKILLS_ACCENT } from "./SkillModal";
 
 export function SkillsSidebar() {
@@ -42,7 +42,7 @@ export function SkillsSidebar() {
             onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-background-secondary)"; e.currentTarget.style.color = "var(--color-text-primary)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-text-secondary)"; }}
           >
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: b.color || HABIT_COLORS[0].hex, flexShrink: 0 }} />
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: neonColor(b.color), flexShrink: 0 }} />
             <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.name}</span>
             {count > 0 && <span className="tabular-nums" style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{count}</span>}
           </button>

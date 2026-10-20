@@ -1,12 +1,24 @@
 import type { Skill } from "@/lib/types/skill.types";
+import { HABIT_COLORS } from "@/lib/habitColors";
 
-/** Rayon de la bulle centrale et des bulles selon la profondeur. */
-export const ROOT_RADIUS = 58;
-export const nodeRadius = (depth: number) => (depth === 1 ? 48 : 40);
-/** Distance au centre de chaque anneau de l'arbre. */
-const ringRadius = (depth: number) => 185 + (depth - 1) * 135;
+/** Couleurs néon des branches (même ordre que la palette de l'app, pour convertir les anciennes). */
+export const NEON_COLORS = ["#B26BFF", "#3BC8FF", "#2CF28A", "#A6F53B", "#FFD21F", "#FF7A1A", "#FF3BA1", "#E6E6E6"];
+
+export function neonColor(hex: string): string {
+  const i = HABIT_COLORS.findIndex((c) => c.hex.toLowerCase() === hex.toLowerCase());
+  return i >= 0 ? NEON_COLORS[i] : hex || NEON_COLORS[0];
+}
+
+/** Rayon de la bulle de départ et des bulles selon la profondeur. */
+export const ROOT_RADIUS = 40;
+export const nodeRadius = (depth: number) => (depth === 1 ? 26 : 18);
+/** Distance à la bulle de départ de chaque niveau de l'arbre. */
+const ringRadius = (depth: number) => 210 + (depth - 1) * 150;
+/** L'arbre pousse vers le haut : les branches principales se partagent cet arc. */
+const ARC_START = -Math.PI + 0.32;
+const ARC_END = -0.32;
 /** Ouverture maximale de l'éventail des sous-compétences autour de leur parent (radians). */
-const fanSpread = (depth: number) => (depth === 2 ? 2.2 : 1.6);
+const fanSpread = (depth: number) => (depth === 2 ? 1.2 : 0.9);
 
 export interface PlacedSkill {
   skill: Skill;
@@ -14,17 +26,18 @@ export interface PlacedSkill {
   x: number;
   y: number;
   r: number;
-  angle: number; // direction depuis le centre
+  angle: number; // direction depuis la bulle de départ
   branchId: string; // compétence principale dont elle descend
 }
 
 export interface SkillLink {
-  from: { x: number; y: number };
-  to: { x: number; y: number };
+  from: { x: number; y: number; angle: number };
+  to: { x: number; y: number; angle: number };
   branchId: string;
+  depth: number; // profondeur de la compétence d'arrivée
 }
 
-/** Emplacement d'un « + » autour de la bulle centrale, avec l'ordre à donner à la nouvelle compétence. */
+/** Emplacement d'un « + » autour de la bulle de départ, avec l'ordre à donner à la nouvelle branche. */
 export interface RootSlot {
   angle: number;
   order: number;
@@ -41,9 +54,9 @@ function sortSiblings(a: Skill, b: Skill) {
 }
 
 /**
- * Arbre radial : les compétences principales se partagent le tour de la bulle centrale
- * (proportionnellement à leur nombre de feuilles), et les sous-compétences s'ouvrent
- * en éventail derrière leur parent, en s'élargissant si elles sont nombreuses.
+ * Arbre qui pousse vers le haut : les branches principales se partagent l'arc au-dessus
+ * de la bulle de départ (selon leur nombre de feuilles), les sous-compétences s'ouvrent
+ * en éventail au bout de leur parent, en s'élargissant si elles sont nombreuses.
  */
 export function layoutSkillTree(skills: Skill[]): SkillTreeLayout {
   const children = new Map<string | null, Skill[]>();
@@ -67,7 +80,7 @@ export function layoutSkillTree(skills: Skill[]): SkillTreeLayout {
   const nodes: PlacedSkill[] = [];
   const links: SkillLink[] = [];
 
-  const place = (parentId: string | null, depth: number, from: number, to: number, parent: { x: number; y: number }, branchId: string | null) => {
+  const place = (parentId: string | null, depth: number, from: number, to: number, parent: { x: number; y: number; angle: number }, branchId: string | null) => {
     const kids = children.get(parentId) ?? [];
     if (!kids.length) return;
     const R = ringRadius(depth);
@@ -77,17 +90,12 @@ export function layoutSkillTree(skills: Skill[]): SkillTreeLayout {
     let start = from;
     let end = to;
     if (depth >= 2) {
-      // Éventail centré sur le parent, assez large pour que les bulles ne se touchent pas
-      const needed = total * ((2 * r + 18) / R);
+      // Éventail centré sur le parent, assez large pour les bulles et leur nom
+      const needed = total * ((2 * r + 64) / R);
       const spread = Math.min(to - from, Math.max(fanSpread(depth), needed));
       const center = (from + to) / 2;
       start = center - spread / 2;
       end = center + spread / 2;
-    } else {
-      // La première compétence principale pointe vers le haut
-      const first = ((to - from) * leafCount(kids[0].id)) / total;
-      start = -Math.PI / 2 - first / 2;
-      end = start + (to - from);
     }
 
     let cursor = start;
@@ -98,39 +106,45 @@ export function layoutSkillTree(skills: Skill[]): SkillTreeLayout {
       const y = Math.sin(angle) * R;
       const branch = branchId ?? kid.id;
       nodes.push({ skill: kid, depth, x, y, r, angle, branchId: branch });
-      links.push({ from: parent, to: { x, y }, branchId: branch });
-      place(kid.id, depth + 1, cursor, cursor + share, { x, y }, branch);
+      links.push({ from: parent, to: { x, y, angle }, branchId: branch, depth });
+      place(kid.id, depth + 1, cursor, cursor + share, { x, y, angle }, branch);
       cursor += share;
     }
   };
-  place(null, 1, 0, Math.PI * 2, { x: 0, y: 0 }, null);
+  // Depuis la bulle de départ, les branches partent vers le haut
+  place(null, 1, ARC_START, ARC_END, { x: 0, y: 0, angle: -Math.PI / 2 }, null);
 
-  // « + » autour de la bulle centrale : entre deux compétences principales
+  // « + » autour de la bulle de départ : à gauche, entre deux branches et à droite
   const main = nodes.filter((n) => n.depth === 1);
   let rootSlots: RootSlot[];
   if (main.length === 0) {
-    rootSlots = [-Math.PI / 2, 0, Math.PI / 2, Math.PI].map((angle) => ({ angle, order: 0 }));
-  } else if (main.length === 1) {
-    const { angle, skill } = main[0];
-    rootSlots = [
-      { angle: angle + Math.PI / 2, order: skill.order + 1 },
-      { angle: angle + Math.PI, order: skill.order + 1 },
-      { angle: angle - Math.PI / 2, order: skill.order - 1 },
-    ];
+    rootSlots = [-Math.PI / 2 - 0.75, -Math.PI / 2, -Math.PI / 2 + 0.75].map((angle) => ({ angle, order: 0 }));
   } else {
-    rootSlots = main.map((n, i) => {
-      const next = main[(i + 1) % main.length];
-      const gap = (next.angle - n.angle + Math.PI * 4) % (Math.PI * 2);
-      const last = i === main.length - 1;
-      return { angle: n.angle + gap / 2, order: last ? n.skill.order + 1 : (n.skill.order + next.skill.order) / 2 };
+    rootSlots = [{ angle: (ARC_START + main[0].angle) / 2, order: main[0].skill.order - 1 }];
+    main.forEach((n, i) => {
+      const next = main[i + 1];
+      rootSlots.push(next
+        ? { angle: (n.angle + next.angle) / 2, order: (n.skill.order + next.skill.order) / 2 }
+        : { angle: (n.angle + ARC_END) / 2, order: n.skill.order + 1 });
     });
   }
 
   return { nodes, links, rootSlots };
 }
 
-/** Découpe un nom en lignes courtes pour tenir dans une bulle (3 lignes maximum). */
-export function wrapLabel(text: string, maxChars: number, maxLines = 3): string[] {
+/** Courbe douce d'une bulle à l'autre : elle part dans la direction du parent et arrive dans celle de l'enfant. */
+export function linkPath(link: SkillLink): string {
+  const { from, to } = link;
+  const k = Math.hypot(to.x - from.x, to.y - from.y) * 0.45;
+  const c1x = from.x + Math.cos(from.angle) * k;
+  const c1y = from.y + Math.sin(from.angle) * k;
+  const c2x = to.x - Math.cos(to.angle) * k;
+  const c2y = to.y - Math.sin(to.angle) * k;
+  return `M ${from.x.toFixed(1)} ${from.y.toFixed(1)} C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${to.x.toFixed(1)} ${to.y.toFixed(1)}`;
+}
+
+/** Découpe un nom en lignes courtes (2 lignes maximum). */
+export function wrapLabel(text: string, maxChars: number, maxLines = 2): string[] {
   const words = text.trim().split(/\s+/);
   const lines: string[] = [];
   let line = "";

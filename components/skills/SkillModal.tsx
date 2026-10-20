@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmDeleteButton, LABEL, INPUT, PrimaryButton, SecondaryButton } from "@/components/grades/ui";
-import { HABIT_COLORS } from "@/lib/habitColors";
+import { NEON_COLORS, neonColor } from "@/lib/skillTree";
 import { useSkillsStore, skillWithDescendants } from "@/lib/store/skills.store";
 import { useAuthStore } from "@/lib/store/auth.store";
 
@@ -19,15 +19,15 @@ export function SkillModal() {
   const isMain = parentId === null; // compétence principale : elle choisit la couleur de sa branche
 
   const [name, setName] = useState("");
-  const [color, setColor] = useState(HABIT_COLORS[0].hex);
+  const [color, setColor] = useState(NEON_COLORS[0]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!modal) return;
-    const used = new Set(useSkillsStore.getState().skills.filter((s) => s.parentId === null).map((s) => s.color));
+    const used = new Set(useSkillsStore.getState().skills.filter((s) => s.parentId === null).map((s) => neonColor(s.color)));
     setName(modal.mode === "edit" ? modal.skill.name : "");
-    setColor(modal.mode === "edit" ? modal.skill.color || HABIT_COLORS[0].hex : (HABIT_COLORS.find((c) => !used.has(c.hex)) ?? HABIT_COLORS[0]).hex);
+    setColor(modal.mode === "edit" ? neonColor(modal.skill.color) : NEON_COLORS.find((c) => !used.has(c)) ?? NEON_COLORS[0]);
     setSaving(false);
     setError(false);
   }, [modal]);
@@ -101,12 +101,12 @@ export function SkillModal() {
         <div>
           <span style={LABEL}>Couleur de la branche</span>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {HABIT_COLORS.map((c, i) => {
-              const sel = c.hex === color;
+            {NEON_COLORS.map((hex, i) => {
+              const sel = hex === color;
               return (
                 <button
-                  key={c.hex} onClick={() => setColor(c.hex)} aria-label={`Couleur ${i + 1}`} aria-pressed={sel} title={c.hex}
-                  style={{ width: 26, height: 26, borderRadius: "50%", background: c.hex, border: sel ? "2px solid var(--color-text-primary)" : "2px solid transparent", cursor: "pointer", padding: 0, flexShrink: 0 }}
+                  key={hex} onClick={() => setColor(hex)} aria-label={`Couleur ${i + 1}`} aria-pressed={sel} title={hex}
+                  style={{ width: 26, height: 26, borderRadius: "50%", background: hex, border: sel ? "2px solid var(--color-text-primary)" : "2px solid transparent", cursor: "pointer", padding: 0, flexShrink: 0 }}
                 />
               );
             })}
