@@ -97,9 +97,8 @@ export default function WorkWeekPage() {
         </button>
       </div>
 
-      {/* Grouped days */}
+      {/* Tous les jours de la semaine : un clic sur un jour ajoute une tâche à cette date */}
       {weekGroups.map(({ iso, label, isToday, tasks: dayTasks }) => {
-        if (dayTasks.length === 0) return null;
         const dayDone = dayTasks.filter((t) => t.status === "done").length;
         return (
           <div key={iso}>
@@ -134,33 +133,41 @@ export default function WorkWeekPage() {
                   Aujourd&apos;hui
                 </span>
               )}
-              <span style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>
-                {dayDone}/{dayTasks.length}
-              </span>
+              {dayTasks.length > 0 && (
+                <span style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>
+                  {dayDone}/{dayTasks.length}
+                </span>
+              )}
+              <button
+                onClick={() => openModal(iso)}
+                aria-label={`Ajouter une tâche le ${label}`}
+                style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4, padding: "2px 8px", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 20, background: "transparent", color: "var(--color-text-secondary)", fontSize: 11, cursor: "pointer" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#D85A30"; e.currentTarget.style.color = "#D85A30"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--color-border-tertiary)"; e.currentTarget.style.color = "var(--color-text-secondary)"; }}
+              >
+                <i className="ti ti-plus" style={{ fontSize: 12 }} />
+                Ajouter
+              </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {dayTasks.map((task) => (
-                <TaskRow key={task.id} task={task} onToggle={() => toggleDone(uid, task.id)} onEdit={() => openEditModal(task)} />
-              ))}
-            </div>
+            {dayTasks.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {dayTasks.map((task) => (
+                  <TaskRow key={task.id} task={task} onToggle={() => toggleDone(uid, task.id)} onEdit={() => openEditModal(task)} />
+                ))}
+              </div>
+            ) : (
+              <button
+                onClick={() => openModal(iso)}
+                style={{ width: "100%", padding: "9px 12px", textAlign: "left", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", background: "var(--color-background-primary)", color: "var(--color-text-tertiary)", fontSize: 12, cursor: "pointer" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#D85A30"; e.currentTarget.style.color = "var(--color-text-secondary)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--color-border-tertiary)"; e.currentTarget.style.color = "var(--color-text-tertiary)"; }}
+              >
+                Rien de prévu · clique pour ajouter une tâche
+              </button>
+            )}
           </div>
         );
       })}
-
-      {totalTasks === 0 && (
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--color-text-tertiary)",
-            fontSize: 13,
-          }}
-        >
-          Aucune tâche cette semaine
-        </div>
-      )}
 
       <TaskModal />
     </div>

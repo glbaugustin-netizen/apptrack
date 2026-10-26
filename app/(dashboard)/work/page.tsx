@@ -88,6 +88,7 @@ export default function WorkPage() {
   const { tasks, openModal, openEditModal, toggleDone, reorderTasks } = useWorkStore();
   const uid = useAuthStore((s) => s.user?.uid ?? "");
   const [filter, setFilter] = useState<FilterValue>("all");
+  const [hoveredDay, setHoveredDay] = useState<string | null>(null);
 
   const weekISOs = useMemo(() => getWeekISOs(TODAY_ISO), []);
 
@@ -281,16 +282,33 @@ export default function WorkPage() {
             const dayNum   = new Date(iso + "T12:00:00Z").getUTCDate();
             const dayTasks = tasks.filter((t) => t.dueDate === iso).sort((a, b) => a.order - b.order);
 
+            const hovered  = hoveredDay === iso;
+
+            // Clic sur le jour : nouvelle tâche à cette date
             return (
               <div
                 key={iso}
+                role="button"
+                tabIndex={0}
+                aria-label={`Ajouter une tâche le ${DAY_ABBR[i]} ${dayNum}`}
+                title="Ajouter une tâche ce jour-là"
+                onClick={() => openModal(iso)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(iso); } }}
+                onMouseEnter={() => setHoveredDay(iso)}
+                onMouseLeave={() => setHoveredDay(null)}
                 style={{
-                  background: "var(--color-background-primary)",
-                  border: `0.5px solid ${isToday ? "#D85A30" : "var(--color-border-tertiary)"}`,
+                  position: "relative",
+                  background: hovered ? "var(--color-background-secondary)" : "var(--color-background-primary)",
+                  border: `0.5px solid ${isToday || hovered ? "#D85A30" : "var(--color-border-tertiary)"}`,
                   borderRadius: "var(--border-radius-md)",
                   overflow: "hidden",
+                  cursor: "pointer",
+                  transition: "background 0.1s, border-color 0.1s",
                 }}
               >
+                {hovered && (
+                  <i className="ti ti-plus" style={{ position: "absolute", top: 5, right: 5, fontSize: 12, color: "#D85A30" }} />
+                )}
                 <div style={{ padding: "7px 8px", borderBottom: "0.5px solid var(--color-border-tertiary)", textAlign: "center" }}>
                   <div style={{ fontSize: 10, color: "var(--color-text-secondary)" }}>{DAY_ABBR[i]}</div>
                   <div style={{ fontSize: 14, fontWeight: 500, color: isToday ? "#D85A30" : "var(--color-text-primary)" }}>
@@ -308,6 +326,7 @@ export default function WorkPage() {
                         <div
                           key={t.id}
                           title={t.title}
+                          onClick={(e) => { e.stopPropagation(); openEditModal(t); }}
                           style={{
                             margin: "2px 6px",
                             padding: "3px 6px",
