@@ -42,13 +42,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     return unsub;
   }, []);
 
+  // Le lobby (page d'accueil) occupe tout l'écran, sans barre ni menu.
+  const isLobby = pathname === "/";
+
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--color-background-tertiary)" }}>
-        <div style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>Chargement…</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: isLobby ? "#06070A" : "var(--color-background-tertiary)" }}>
+        <div style={{ fontSize: 13, color: isLobby ? "#5A5F6E" : "var(--color-text-secondary)" }}>Chargement…</div>
       </div>
     );
   }
+
+  if (isLobby) return <>{children}</>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--color-background-tertiary)", overflow: "hidden" }}>

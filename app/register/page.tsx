@@ -20,7 +20,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(email, password, name || undefined);
-      router.push("/habits");
+      router.push("/");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("email-already-in-use")) setError("Cet email est déjà utilisé");

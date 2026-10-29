@@ -34,10 +34,10 @@ export function Topbar() {
       >
         <i className="ti ti-menu-2" />
       </button>
-      <div style={{ display: "flex", alignItems: "center", gap: 7, paddingRight: 16, borderRight: "0.5px solid var(--color-border-tertiary)", marginRight: 4, fontWeight: 500, fontSize: 14, color: "var(--color-text-primary)", whiteSpace: "nowrap", flexShrink: 0 }}>
-        <i className="ti ti-layout-dashboard" style={{ fontSize: 17, color: "#7F77DD" }} />
-        <span className="topbar-module-label">Productivity</span>
-      </div>
+      <Link href="/" title="Retour au lobby" style={{ display: "flex", alignItems: "center", gap: 7, paddingRight: 16, borderRight: "0.5px solid var(--color-border-tertiary)", marginRight: 4, fontWeight: 500, fontSize: 14, color: "var(--color-text-primary)", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+        <i className="ti ti-home" style={{ fontSize: 17, color: "#7F77DD" }} />
+        <span className="topbar-module-label">Lobby</span>
+      </Link>
 
       <nav className="topbar-module-nav">
         {MODULES.map((module) => {

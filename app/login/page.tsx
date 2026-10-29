@@ -19,7 +19,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push("/habits");
+      router.push("/");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("invalid-credential") || msg.includes("wrong-password") || msg.includes("user-not-found")) {

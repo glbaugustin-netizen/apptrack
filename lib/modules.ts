@@ -7,6 +7,8 @@ export interface Module {
   accent: string;
   accentPastel: string;
   accentDark: string;
+  /** Version néon de l'accent, pour les écrans façon jeu vidéo (lobby). */
+  neon: string;
   path: string;
 }
 
@@ -18,6 +20,7 @@ export const MODULES: Module[] = [
     accent: "#7F77DD",
     accentPastel: "#EEEDFE",
     accentDark: "#534AB7",
+    neon: "#B26BFF",
     path: "/habits",
   },
   {
@@ -27,6 +30,7 @@ export const MODULES: Module[] = [
     accent: "#D85A30",
     accentPastel: "#FAECE7",
     accentDark: "#993C1D",
+    neon: "#FF7A1A",
     path: "/work",
   },
   {
@@ -36,6 +40,7 @@ export const MODULES: Module[] = [
     accent: "#378ADD",
     accentPastel: "#E6F1FB",
     accentDark: "#185FA5",
+    neon: "#3BC8FF",
     path: "/calendar",
   },
   {
@@ -45,6 +50,7 @@ export const MODULES: Module[] = [
     accent: "#1D9E75",
     accentPastel: "#E1F5EE",
     accentDark: "#0F6E56",
+    neon: "#2CF28A",
     path: "/tracker",
   },
   {
@@ -54,6 +60,7 @@ export const MODULES: Module[] = [
     accent: "#D4537E",
     accentPastel: "#FBEAF0",
     accentDark: "#993556",
+    neon: "#FF3BA1",
     path: "/grades",
   },
   {
@@ -63,6 +70,7 @@ export const MODULES: Module[] = [
     accent: "#BA7517",
     accentPastel: "#FAEEDA",
     accentDark: "#854F0B",
+    neon: "#FFD21F",
     path: "/skills",
   },
 ];
